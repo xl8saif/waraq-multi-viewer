@@ -133,6 +133,7 @@ https://example.com"></textarea>
       <div class="actions">
         <button class="primary" id="load">Load panes</button>
         <button id="refresh">Reload all</button>
+        <button id="play" class="primary">Play all</button>
         <button id="stop">Stop all</button>
         <button id="mute">Mute all</button>
         <button id="clear" class="danger">Clear</button>
@@ -204,6 +205,18 @@ function loadYTApi(){
 function layout(n){
   const cols=n<=1?1:n<=4?2:n<=9?3:4;
   grid.style.gridTemplateColumns="repeat("+cols+",minmax(0,1fr))";
+}
+function getLayerCount(){
+  const value=parseInt($("layers").value,10);
+  return Number.isFinite(value)&&value>0?value:1;
+}
+function updatePaneCount(){
+  const urls=$("urls").value.split(/\n+/).map(normalize).filter(Boolean);
+  const layers=getLayerCount();
+  const total=urls.length*layers;
+  $("pane-count").textContent=urls.length
+    ? urls.length+" URL(s) × "+layers+" layer"+(layers===1?"":"s")+" = "+total+" pane(s)"
+    : "Enter URLs to calculate panes";
 }
 function setState(p,text,kind=""){
   p.state.textContent=text;
@@ -279,17 +292,42 @@ function build(){
   panes=[];
   const urls=$("urls").value.split(/\n+/).map(normalize).filter(Boolean);
   if(!urls.length){grid.innerHTML='<div class="glass empty">Enter at least one valid URL.</div>';status.textContent="";return}
-  const shown=urls;
+  const layers=getLayerCount();
+  const shown=[];
+  for(let layer=1;layer<=layers;layer++){
+    urls.forEach(u=>shown.push({url:u,layer}));
+  }
   grid.innerHTML="";
   layout(shown.length);
-  shown.forEach((u,i)=>{const p=makePane(u,i);panes.push(p);grid.appendChild(p.el)});
-  status.textContent="Loaded "+panes.length+" pane(s).";
+  shown.forEach((item,i)=>{
+    const p=makePane(item.url,i);
+    p.layer=item.layer;
+    const title=p.el.querySelector(".pane-title");
+    title.textContent=(p.ytId?"YouTube · "+p.ytId:item.url)+" · Layer "+item.layer;
+    title.title=item.url+" · Layer "+item.layer;
+    panes.push(p);
+    grid.appendChild(p.el);
+  });
+  status.textContent=layers>1
+    ?"Loaded "+panes.length+" pane(s) across "+layers+" QA layers. Autoplay is disabled for layered testing."
+    :"Loaded "+panes.length+" pane(s).";
   panes.filter(p=>p.ytId).forEach(initYouTube);
 }
 $("load").onclick=build;
 $("urls").addEventListener("input",updatePaneCount);
 $("layers").addEventListener("input",updatePaneCount);
 $("refresh").onclick=()=>panes.forEach(reloadPane);
+$("play").onclick=()=>{
+  let started=0;
+  panes.forEach(p=>{
+    if(p.player&&typeof p.player.playVideo==="function"){
+      try{p.player.playVideo();started++}catch(e){}
+    }
+  });
+  status.textContent=started
+    ?"Play command sent to "+started+" YouTube pane(s). Browser autoplay policy may require user interaction or muted playback."
+    :"No loaded YouTube players are available to play.";
+};
 $("mute").onclick=()=>{
   let muted=0;
   panes.forEach(p=>{if(p.player&&typeof p.player.mute==="function"){p.player.mute();muted++}});
