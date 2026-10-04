@@ -43,7 +43,12 @@ jobs:
             }
           }
 
-          const scripts = [...index.matchAll(/<script\\b[^>]*>([\\s\\S]*?)<\\/script>/gi)].map(m => m[1]);
+          const scripts = [];
+          for (const part of index.split('<script').slice(1)) {
+            const openEnd = part.indexOf('>');
+            const close = part.indexOf('</script>');
+            if (openEnd >= 0 && close > openEnd) scripts.push(part.slice(openEnd + 1, close));
+          }
           if (!scripts.length) {
             console.error('No inline JavaScript found.');
             process.exit(1);
