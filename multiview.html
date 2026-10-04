@@ -261,6 +261,54 @@ h1{font-size:clamp(32px,4.2vw,52px);margin-bottom:4px}
   .action-group{width:100%;grid-column:1/-1}
   .action-group button{flex:1}
 }
+
+/* Readability pass: enlarge the interface text without changing the layout */
+body{font-size:16px}
+.sub{font-size:clamp(16px,1.55vw,19px)}
+.urdu-sub{font-size:clamp(18px,1.8vw,23px)}
+.badge{font-size:12px}
+.lang-switch button{font-size:12px;padding:6px 10px}
+.playlist-input input{font-size:14px}
+.playlist-input button{font-size:13px}
+.field-help{font-size:11px}
+.controls label,.setting-card label,label{font-size:11px}
+.controls textarea{font-size:13px;line-height:1.5}
+.setting-card input,.setting-card select{font-size:13px}
+.setting-unit{font-size:11px}
+.pane-total-number{font-size:24px}
+.pane-total-detail{font-size:11px}
+.setting-help{font-size:11px}
+.action-group button,.actions button{font-size:13px;min-height:36px}
+.status{font-size:12px}
+.history-head{font-size:12px}
+.history-actions button{font-size:11px}
+.history-item button{font-size:12px}
+.history-empty{font-size:12px}
+.pane-num{font-size:11px}
+.pane-title{font-size:12px}
+.pane-state{font-size:11px}
+.pane-actions button{font-size:11px}
+.placeholder{font-size:13px}
+.help{font-size:12px}
+.perf-title{font-size:10px}
+.perf-metrics{font-size:11px}
+.footer-brand strong{font-size:12px}
+.footer-brand span{font-size:11px}
+.footer-kicker{font-size:9px}
+.footer-country{font-size:10px}
+@media(max-width:560px){
+  .sub{font-size:15px}
+  .urdu-sub{font-size:18px}
+  .controls label,.setting-card label,label{font-size:11px}
+  .field-help,.setting-help{font-size:10px}
+  .setting-card input,.setting-card select{font-size:12px}
+  .action-group button,.actions button{font-size:12px}
+  .pane-title{font-size:11px}
+  .pane-state{font-size:10px}
+  .pane-actions button{font-size:10px}
+  .perf-metrics{font-size:10px}
+}
+
 </style>
 </head>
 <body>
