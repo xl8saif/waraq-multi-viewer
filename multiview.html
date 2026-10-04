@@ -66,6 +66,21 @@ button.danger{color:#ffb0aa}
 @media(max-width:850px){.controls{grid-template-columns:1fr}.hero{align-items:flex-start;flex-direction:column}.badge{display:none}}
 @media(max-width:520px){.shell{padding:20px 10px 30px}.settings{grid-template-columns:1fr}.controls{padding:10px}.pane-head{padding:8px}.pane-actions button{padding:5px 6px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
+.site-footer{margin-top:22px;border:1px solid var(--line);background:rgba(255,255,255,.055);box-shadow:0 20px 60px rgba(0,0,0,.28);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:20px;padding:18px}
+.site-footer-inner{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(180px,.7fr);gap:20px;align-items:center}
+.footer-brand{display:flex;align-items:center;gap:14px;min-width:0}
+.footer-brand img{width:58px;height:58px;object-fit:contain;border-radius:14px;background:rgba(255,255,255,.08);padding:6px;border:1px solid var(--line)}
+.footer-brand strong,.footer-brand span{display:block}
+.footer-brand strong{font-size:13px;color:#e7e7eb;margin-top:3px}
+.footer-brand span{font-size:11px;color:var(--muted);margin-top:4px}
+.footer-kicker{font-size:10px;letter-spacing:.1em;color:#8f8f98}
+.footer-visitors{text-align:right}
+.footer-visitors>a{display:inline-block;margin-top:7px}
+.footer-visitors img{display:block;max-width:100%;height:auto}
+.footer-country{font-size:11px;color:#a9a9b1;text-decoration:none}
+.footer-country:hover{color:var(--ink)}
+@media(max-width:650px){.site-footer-inner{grid-template-columns:1fr}.footer-visitors{text-align:left}}
 </style>
 </head>
 <body>
@@ -106,7 +121,26 @@ https://example.com"></textarea>
 
   <div id="grid"><div class="glass empty">Paste URLs above and select <b>Load panes</b>. Each URL creates one connected pane.</div></div>
   <p class="help">YouTube panes use the official embedded player. In Test loop mode, a video is restarted after its player reports <code>ENDED</code>; this is intended for player/localization QA, not for manufacturing engagement or watch-time metrics. Some websites block iframe embedding.</p>
-</main>
+
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <div class="footer-brand">
+      <img src="https://xl8saif.github.io/site/images/waraq-logo.png" alt="Waraq Enterprises">
+      <div>
+        <div class="footer-kicker">A PROJECT OF WARAQ ENTERPRISES, GILGIT</div>
+        <strong>Developed &amp; Vibe Coded by Saif Ullah Jailani</strong>
+        <span>Waraq Enterprises, KIU Road, Court Area, Konodass, Gilgit, Pakistan - 15100</span>
+      </div>
+    </div>
+    <div class="footer-visitors">
+      <div class="footer-kicker">SITE VISITORS</div>
+      <a href="https://visitorbadge.io/" target="_blank" rel="noreferrer" aria-label="Website visitor counter">
+        <img src="https://api.visitorbadge.io/api/combined?path=https%3A%2F%2Fxl8saif.github.io%2Fwaraq-multi-viewer%2Fmultiview.html&label=VISITORS&labelColor=%231b2635&countColor=%232b6cb0" alt="Website visitor counter" loading="lazy">
+      </a>
+      <a class="footer-country" href="https://feed-pulse.com/site/xl8saif.github.io/flags" target="_blank" rel="noreferrer">View visitor countries ↗</a>
+    </div>
+  </div>
+</footer></main>
 
 <script>
 const $=id=>document.getElementById(id);
