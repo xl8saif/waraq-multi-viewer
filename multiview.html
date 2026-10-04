@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -21,7 +21,7 @@ button,input,select,textarea{font:inherit}
 button{cursor:pointer}
 .shell{width:min(1500px,100%);margin:auto;padding:28px 18px 40px}
 .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:18px}
-h1{font-size:clamp(28px,4vw,46px);line-height:1.05;letter-spacing:-.045em;margin:0 0 8px;display:inline-block;position:relative;background:linear-gradient(90deg,#ff3b30,#ff9f0a,#ffd60a,#30d158,#0a84ff,#5e5ce6,#ff2d55,#ff3b30);background-size:400% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 18px rgba(10,132,255,.18);animation:rainbowFlow 7s linear infinite,shinePulse 2.8s ease-in-out infinite alternate}
+.urdu-title{display:none;font-family:"Mehr Nastaliq","Noto Nastaliq Urdu","Jameel Noori Nastaleeq",serif;direction:rtl;text-align:right;line-height:1.7;letter-spacing:0;margin:0 0 4px}h1{font-size:clamp(28px,4vw,46px);line-height:1.05;letter-spacing:-.045em;margin:0 0 8px;display:inline-block;position:relative;background:linear-gradient(90deg,#ff3b30,#ff9f0a,#ffd60a,#30d158,#0a84ff,#5e5ce6,#ff2d55,#ff3b30);background-size:400% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 18px rgba(10,132,255,.18);animation:rainbowFlow 7s linear infinite,shinePulse 2.8s ease-in-out infinite alternate}
 .sub{margin:0;color:var(--muted);max-width:760px}
 
 .urdu-sub{display:none;font-family:"Noto Nastaliq Urdu","Noto Naskh Arabic","Jameel Noori Nastaleeq",serif;font-size:14px;line-height:2;text-align:right}
@@ -104,7 +104,7 @@ button, .circle, .control-circle, .pane-control, .icon-button {
 <main class="shell">
   <section class="hero">
     <div>
-      <h1>Waraq Multi-Viewer</h1>
+      <h1 class="en-title">Waraq Multi-Viewer</h1><h1 class="urdu-title" lang="ur" dir="rtl">ورق کثیر المشاہدہ</h1>
       <p class="sub" data-i18n="sub">A responsive multi-pane viewer for YouTube player testing and ordinary web pages. Paste multiple URLs, choose a layout, and control each pane independently.</p>
       <p class="sub urdu-sub" lang="ur" dir="rtl">یوٹیوب اور ویب صفحات کے لیے ورق کا کثیر المشاہدہ پلیٹ فارم۔ متعدد ویڈیوز یا صفحات ایک ساتھ کھولیں، ترتیب منتخب کریں اور ہر پینل کو الگ کنٹرول کریں۔</p>
     </div>
@@ -302,6 +302,9 @@ const langButtons=document.querySelectorAll("[data-lang]");
 function setLanguage(lang){
   document.documentElement.lang=lang==="ur"?"ur":"en";
   document.querySelector(".sub").style.display=lang==="ur"?"none":"block";
+  document.querySelector(".en-title").style.display=lang==="ur"?"none":"inline-block";
+  document.querySelector(".urdu-title").style.display=lang==="ur"?"block":"none";
+  document.querySelector(".hero").dir=lang==="ur"?"rtl":"ltr";
   document.querySelector(".urdu-sub").style.display=lang==="ur"?"block":"none";
   langButtons.forEach(b=>b.classList.toggle("active",b.dataset.lang===lang));
   try{localStorage.setItem("waraq-multiviewer-lang",lang)}catch(e){}
