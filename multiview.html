@@ -23,6 +23,11 @@ button{cursor:pointer}
 .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:18px}
 h1{font-size:clamp(28px,4vw,46px);line-height:1.05;letter-spacing:-.045em;margin:0 0 8px;display:inline-block;position:relative;background:linear-gradient(90deg,#ff3b30,#ff9f0a,#ffd60a,#30d158,#0a84ff,#5e5ce6,#ff2d55,#ff3b30);background-size:400% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 18px rgba(10,132,255,.18);animation:rainbowFlow 7s linear infinite,shinePulse 2.8s ease-in-out infinite alternate}
 .sub{margin:0;color:var(--muted);max-width:760px}
+
+.urdu-sub{display:none;font-family:"Noto Nastaliq Urdu","Noto Naskh Arabic","Jameel Noori Nastaleeq",serif;font-size:14px;line-height:2;text-align:right}
+.lang-switch{display:flex;align-items:center;gap:6px;margin-top:10px}
+.lang-switch button{padding:6px 10px;border-radius:999px;font-size:11px}
+.lang-switch button.active{background:var(--accent);border-color:var(--accent)}
 .badge{white-space:nowrap;border:1px solid var(--line);background:rgba(255,255,255,.06);
  padding:8px 12px;border-radius:999px;color:#d4d4d8;font-size:12px;backdrop-filter:blur(18px)}
 .glass{border:1px solid var(--line);background:var(--panel);box-shadow:0 20px 60px rgba(0,0,0,.3);
@@ -97,9 +102,10 @@ button, .circle, .control-circle, .pane-control, .icon-button {
   <section class="hero">
     <div>
       <h1>Waraq Multi-Viewer</h1>
-      <p class="sub">A responsive multi-pane viewer for YouTube player testing and ordinary web pages. Paste multiple URLs, choose a layout, and control each pane independently.</p>
+      <p class="sub" data-i18n="sub">A responsive multi-pane viewer for YouTube player testing and ordinary web pages. Paste multiple URLs, choose a layout, and control each pane independently.</p>
+      <p class="sub urdu-sub" lang="ur" dir="rtl">یوٹیوب پلیئر ٹیسٹنگ اور عام ویب صفحات کے لیے ریسپانسیو ملٹی پین ویور۔ متعدد لنکس شامل کریں، لے آؤٹ منتخب کریں اور ہر پین کو الگ کنٹرول کریں۔</p>
     </div>
-    <div class="badge">LOCAL PLAYER QA</div>
+    <div><div class="badge">LOCAL PLAYER QA</div><div class="lang-switch" aria-label="Language"><button type="button" class="active" data-lang="en">EN</button><button type="button" data-lang="ur">اردو</button></div></div>
   </section>
 
   <section class="glass controls">
@@ -288,6 +294,17 @@ $("clear").onclick=()=>{
   panes=[];grid.innerHTML='<div class="glass empty">Paste URLs above and select <b>Load panes</b>.</div>';status.textContent="";
 };
 window.addEventListener("resize",()=>{if(panes.length)layout(panes.length)});
+
+const langButtons=document.querySelectorAll("[data-lang]");
+function setLanguage(lang){
+  document.documentElement.lang=lang==="ur"?"ur":"en";
+  document.querySelector(".sub").style.display=lang==="ur"?"none":"block";
+  document.querySelector(".urdu-sub").style.display=lang==="ur"?"block":"none";
+  langButtons.forEach(b=>b.classList.toggle("active",b.dataset.lang===lang));
+  try{localStorage.setItem("waraq-multiviewer-lang",lang)}catch(e){}
+}
+langButtons.forEach(b=>b.addEventListener("click",()=>setLanguage(b.dataset.lang)));
+try{setLanguage(localStorage.getItem("waraq-multiviewer-lang")||"en")}catch(e){setLanguage("en")}
 </script>
 </body>
 </html>
