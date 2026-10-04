@@ -24,10 +24,10 @@ button,input,select,textarea{font:inherit}
 button{cursor:pointer}
 .shell{width:min(1500px,100%);margin:auto;padding:28px 18px 40px}
 .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:18px}
-.urdu-title{display:none;font-family:"Alyamama","Noto Naskh Arabic","Noto Nastaliq Urdu",serif;direction:rtl;text-align:right;line-height:1.7;letter-spacing:0;margin:0 0 4px}h1{font-size:clamp(28px,4vw,46px);line-height:1.05;letter-spacing:-.045em;margin:0 0 8px;display:inline-block;position:relative;background:linear-gradient(90deg,#ff3b30,#ff9f0a,#ffd60a,#30d158,#0a84ff,#5e5ce6,#ff2d55,#ff3b30);background-size:400% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 18px rgba(10,132,255,.18);animation:rainbowFlow 7s linear infinite,shinePulse 2.8s ease-in-out infinite alternate}
-.sub{margin:0;color:var(--muted);max-width:760px}
+.urdu-title{display:none;font-family:"Alyamama","Noto Naskh Arabic","Noto Nastaliq Urdu",serif;direction:rtl;text-align:right;line-height:1.7;letter-spacing:0;margin:0 0 4px}h1{font-size:clamp(34px,5vw,58px);line-height:1.12;letter-spacing:-.045em;margin:0 0 10px;display:inline-block;position:relative;background:linear-gradient(90deg,#ff3b30,#ff9f0a,#ffd60a,#30d158,#0a84ff,#5e5ce6,#ff2d55,#ff3b30);background-size:400% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 18px rgba(10,132,255,.18);animation:rainbowFlow 7s linear infinite,shinePulse 2.8s ease-in-out infinite alternate}
+.sub{margin:0;color:var(--muted);max-width:820px;font-size:clamp(15px,1.45vw,18px);line-height:1.65;text-shadow:0 0 12px rgba(255,255,255,.08)}
 
-.urdu-sub{display:none;font-family:"Noto Nastaliq Urdu","Noto Naskh Arabic","Jameel Noori Nastaleeq",serif;font-size:14px;line-height:2;text-align:right}
+.urdu-sub{display:none;font-family:"Noto Nastaliq Urdu","Noto Naskh Arabic","Jameel Noori Nastaleeq",serif;font-size:clamp(17px,1.7vw,22px);line-height:2.15;text-align:right;max-width:900px;text-shadow:0 0 14px rgba(255,255,255,.09)}
 .lang-switch{display:flex;align-items:center;gap:6px;margin-top:10px}.lang-switch{position:relative;z-index:20;pointer-events:auto}.lang-switch button{position:relative;z-index:21;pointer-events:auto;touch-action:manipulation}
 .lang-switch button{padding:6px 10px;border-radius:999px;font-size:11px}
 .lang-switch button.active{background:var(--accent);border-color:var(--accent)}
@@ -124,7 +124,7 @@ button.danger{color:#ffb0aa}
 @media(max-width:850px){.controls{grid-template-columns:1fr}.hero{align-items:flex-start;flex-direction:column}.badge{display:none}}
 @media(max-width:520px){.shell{padding:20px 10px 30px}.settings{grid-template-columns:1fr}.controls{padding:10px}.pane-head{padding:8px}.pane-actions button{padding:5px 6px}}
 @keyframes rainbowFlow{0%{background-position:0% 50%;transform:translateX(0)}50%{background-position:200% 50%;transform:translateX(-3px)}100%{background-position:400% 50%;transform:translateX(0)}}
-@keyframes shinePulse{0%{filter:brightness(1) drop-shadow(0 0 2px rgba(255,255,255,.15))}100%{filter:brightness(1.35) drop-shadow(0 0 12px rgba(255,255,255,.28))}}
+@keyframes shinePulse{0%{filter:brightness(1) drop-shadow(0 0 3px rgba(255,255,255,.16))}100%{filter:brightness(1.45) drop-shadow(0 0 18px rgba(255,255,255,.34))}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 
 .site-footer{margin-top:22px;border:1px solid var(--line);background:rgba(255,255,255,.055);box-shadow:0 20px 60px rgba(0,0,0,.28);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:20px;padding:18px}
