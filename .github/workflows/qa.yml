@@ -67,7 +67,7 @@ jobs:
             'restore','clear-history','grid'
           ];
           for (const id of requiredIds) {
-            if (!new RegExp('id=["\\']' + id + '["\\']').test(index)) {
+            if (!index.includes('id="' + id + '"') && !index.includes("id='" + id + "'")) {
               console.error('Missing required element id:', id);
               process.exit(1);
             }
