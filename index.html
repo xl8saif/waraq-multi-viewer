@@ -35,6 +35,24 @@ button{cursor:pointer}
  padding:8px 12px;border-radius:999px;color:#d4d4d8;font-size:12px;backdrop-filter:blur(18px)}
 .glass{border:1px solid var(--line);background:var(--panel);box-shadow:0 20px 60px rgba(0,0,0,.3);
  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:var(--radius)}
+.viewer-settings{margin-top:16px}
+.settings{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.setting-card{min-width:0;padding:14px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.045);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+.setting-card label{display:block;margin:0 0 9px;font-size:10px;font-weight:700;letter-spacing:.09em;color:#d4d4d8}
+.setting-card input,.setting-card select{width:100%;min-height:42px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:rgba(0,0,0,.28);color:var(--ink);outline:none}
+.setting-card input:focus,.setting-card select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(10,132,255,.14)}
+.setting-row{display:flex;align-items:center;gap:8px}
+.setting-row input{flex:1}
+.setting-unit{font-size:11px;color:var(--muted)}
+.pane-total{min-height:42px;display:flex;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:rgba(0,0,0,.28);color:var(--ink);font-size:12px;font-weight:600}
+.setting-help{margin-top:8px;color:#85858c;font-size:10px;line-height:1.35}
+.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
+.actions button{min-height:42px;padding:9px 15px}
+.history{margin-top:10px}
+.history-head{display:flex;justify-content:flex-end}
+.history-head button{min-height:40px;padding:9px 15px}
+@media(max-width:900px){.settings{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.settings{grid-template-columns:1fr}.actions button{flex:1 1 calc(50% - 9px)}}
 .controls{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(340px,1fr);gap:14px;padding:14px}
 .field{min-width:0}
 label{display:block;color:#b8b8bf;font-size:12px;margin:0 0 7px}
@@ -133,18 +151,18 @@ button, .circle, .control-circle, .pane-control, .icon-button {
 https://youtu.be/VIDEO_ID
 https://example.com"></textarea>
     </div>
-    <div>
+    <div class="viewer-settings">
       <div class="settings">
-        <div><label for="layers">QA LAYERS</label><input id="layers" type="number" min="1" step="1" value="1" inputmode="numeric" aria-describedby="layers-help"><div id="layers-help" style="margin-top:5px;color:#85858c;font-size:10px">Repeats the URL set for parallel player and localization testing.</div></div>
-        <div><label>TOTAL PANES</label><div id="pane-count" style="padding:11px 12px;border:1px solid var(--line);border-radius:13px;background:rgba(0,0,0,.28);color:var(--muted);font-size:12px">Enter URLs to see total panes</div></div>
-        <div><label for="mode">PLAYBACK</label><select id="mode">
+        <div class="setting-card"><label for="layers">QA LAYERS</label><div class="setting-row"><input id="layers" type="number" min="1" step="1" value="1" inputmode="numeric" aria-describedby="layers-help"><span class="setting-unit">layers</span></div><div id="layers-help" class="setting-help">Repeats the URL set for parallel player and localization testing.</div></div>
+        <div class="setting-card"><label>TOTAL PANES</label><div id="pane-count" class="pane-total">Enter URLs to see total panes</div></div>
+        <div class="setting-card"><label for="mode">PLAYBACK</label><select id="mode">
           <option value="qa-loop" selected>Test loop on video end</option>
           <option value="manual">Manual</option>
         </select></div>
-        <div><label for="quality">VIDEO QUALITY</label><select id="quality" aria-describedby="quality-help">
+        <div class="setting-card"><label for="quality">VIDEO QUALITY</label><select id="quality" aria-describedby="quality-help">
           <option value="auto" selected>Auto</option>
           <option value="lowest">Lowest available resolution</option>
-        </select><div id="quality-help" style="margin-top:5px;color:#85858c;font-size:10px">Forces YouTube panes toward the lowest quality available for the video.</div></div>
+        </select><div id="quality-help" class="setting-help">Forces YouTube panes toward the lowest quality available for the video.</div></div>
       </div>
       <div class="actions">
         <button class="primary" id="load">Load panes</button>
@@ -568,8 +586,7 @@ function setLanguage(lang){
   $("quality-help").textContent=tr("qualityHelp");
   $("load").textContent=tr("load"); $("refresh").textContent=tr("refresh"); $("play").textContent=tr("play");
   $("stop").textContent=tr("stop"); $("mute").textContent=tr("mute"); $("clear").textContent=tr("clear");
-  document.querySelector(".history-head strong").textContent=tr("recent");
-  $("restore").textContent=tr("restore"); $("clear-history").textContent=tr("clearHistory");
+    $("restore").textContent=tr("restore");
   document.querySelector(".footer-kicker").textContent=tr("kicker");
   document.querySelector(".footer-brand strong").textContent=tr("developed");
   document.querySelector(".footer-brand span").textContent=tr("address");
