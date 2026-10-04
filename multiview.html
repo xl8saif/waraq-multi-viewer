@@ -123,7 +123,8 @@ https://example.com"></textarea>
     </div>
     <div>
       <div class="settings">
-        <div><label>CONNECTED PANES</label><div style="padding:11px 12px;border:1px solid var(--line);border-radius:13px;background:rgba(0,0,0,.28);color:var(--muted);font-size:12px">One pane per URL</div></div>
+        <div><label for="layers">QA LAYERS</label><input id="layers" type="number" min="1" step="1" value="1" inputmode="numeric" aria-describedby="layers-help"><div id="layers-help" style="margin-top:5px;color:#85858c;font-size:10px">Repeats the URL set for parallel player and localization testing.</div></div>
+        <div><label>CONNECTED PANES</label><div id="pane-count" style="padding:11px 12px;border:1px solid var(--line);border-radius:13px;background:rgba(0,0,0,.28);color:var(--muted);font-size:12px">Enter URLs to calculate panes</div></div>
         <div><label for="mode">PLAYBACK</label><select id="mode">
           <option value="qa-loop" selected>Test loop on video end</option>
           <option value="manual">Manual</option>
@@ -141,7 +142,7 @@ https://example.com"></textarea>
   </section>
 
   <div id="grid"><div class="glass empty">Paste URLs above and select <b>Load panes</b>. Each URL creates one connected pane.</div></div>
-  <p class="help">YouTube panes use the official embedded player. In Test loop mode, a video is restarted after its player reports <code>ENDED</code>; this is intended for player/localization QA, not for manufacturing engagement or watch-time metrics. Some websites block iframe embedding.</p>
+  <p class="help">YouTube panes use the official embedded player. QA Layers repeats the same URL set across parallel panes for player, localization, layout, buffering and load testing. When multiple layers are selected, autoplay is disabled so duplicated panes remain test instances rather than artificial engagement activity. Some websites block iframe embedding.</p>
 
 <footer class="site-footer">
   <div class="site-footer-inner">
@@ -240,7 +241,7 @@ async function initYouTube(p){
     events:{
       onReady:()=>{
         setState(p,$("mode").value==="qa-loop"?"ready · play when started":"ready");
-        if($("mode").value==="qa-loop") p.player.playVideo();
+        if($("mode").value==="qa-loop" && getLayerCount()===1) p.player.playVideo();
       },
       onStateChange:e=>{
         if(e.data===YT.PlayerState.PLAYING)setState(p,"playing","playing");
@@ -248,7 +249,7 @@ async function initYouTube(p){
         else if(e.data===YT.PlayerState.BUFFERING)setState(p,"buffering");
         else if(e.data===YT.PlayerState.ENDED){
           setState(p,"ended","ended");
-          if($("mode").value==="qa-loop"){
+          if($("mode").value==="qa-loop" && getLayerCount()===1){
             setTimeout(()=>{
               if(p.player){p.player.seekTo(0,true);p.player.playVideo()}
             },350);
@@ -286,6 +287,8 @@ function build(){
   panes.filter(p=>p.ytId).forEach(initYouTube);
 }
 $("load").onclick=build;
+$("urls").addEventListener("input",updatePaneCount);
+$("layers").addEventListener("input",updatePaneCount);
 $("refresh").onclick=()=>panes.forEach(reloadPane);
 $("mute").onclick=()=>{
   let muted=0;
@@ -314,6 +317,7 @@ function setLanguage(lang){
 }
 langButtons.forEach(b=>b.addEventListener("click",()=>setLanguage(b.dataset.lang)));
 try{setLanguage(localStorage.getItem("waraq-multiviewer-lang")||"en")}catch(e){setLanguage("en")}
+updatePaneCount()
 </script>
 </body>
 </html>
