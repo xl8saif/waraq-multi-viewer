@@ -139,6 +139,10 @@ https://example.com"></textarea>
           <option value="qa-loop" selected>Test loop on video end</option>
           <option value="manual">Manual</option>
         </select></div>
+        <div><label for="quality">VIDEO QUALITY</label><select id="quality" aria-describedby="quality-help">
+          <option value="auto" selected>Auto</option>
+          <option value="lowest">Lowest available resolution</option>
+        </select><div id="quality-help" style="margin-top:5px;color:#85858c;font-size:10px">Forces YouTube panes toward the lowest quality available for the video.</div></div>
       </div>
       <div class="actions">
         <button class="primary" id="load">Load panes</button>
@@ -243,7 +247,7 @@ function saveHistory(urls){
 function saveSession(){
   try{localStorage.setItem(SESSION_KEY,JSON.stringify({
     urls:$("urls").value.split(/\n+/).map(normalize).filter(Boolean),
-    layers:getLayerCount(),mode:$("mode").value
+    layers:getLayerCount(),mode:$("mode").value,quality:$("quality").value
   }))}catch(e){}
 }
 function renderHistory(){
@@ -276,6 +280,7 @@ function restoreSession(){
     $("urls").value=s.urls.join("\n");
     $("layers").value=Number.isFinite(Number(s.layers))&&Number(s.layers)>0?Number(s.layers):1;
     if(s.mode)$("mode").value=s.mode;
+    if(s.quality==="lowest"||s.quality==="auto")$("quality").value=s.quality;
     updatePaneCount();build();
     status.textContent="Last session restored.";
     window.scrollTo({top:0,behavior:"smooth"});
@@ -352,6 +357,17 @@ function makePane(url,index){
   }
   return p;
 }
+async function applyVideoQuality(p){
+  if(!p.player||$("quality").value!=="lowest")return;
+  try{
+    const levels=p.player.getAvailableQualityLevels();
+    if(!Array.isArray(levels)||!levels.length)return;
+    const rank={tiny:0,small:1,medium:2,large:3,hd720:4,hd1080:5,hd1440:6,hd2160:7,highres:8};
+    const lowest=levels.reduce((best,level)=>
+      (rank[level]??99)<(rank[best]??99)?level:best,levels[0]);
+    p.player.setPlaybackQuality(lowest);
+  }catch(e){}
+}
 async function initYouTube(p){
   await loadYTApi();
   if(!document.body.contains(p.el))return;
@@ -361,6 +377,7 @@ async function initYouTube(p){
     playerVars:{playsinline:1,rel:0,modestbranding:1},
     events:{
       onReady:()=>{
+        applyVideoQuality(p);
         setState(p,$("mode").value==="qa-loop"?"ready · play when started":"ready");
         if($("mode").value==="qa-loop" && getLayerCount()===1) p.player.playVideo();
       },
@@ -426,6 +443,13 @@ function build(){
 $("load").onclick=build;
 $("urls").addEventListener("input",updatePaneCount);
 $("layers").addEventListener("input",updatePaneCount);
+$("quality").addEventListener("change",()=>{
+  saveSession();
+  panes.forEach(p=>applyVideoQuality(p));
+  status.textContent=$("quality").value==="lowest"
+    ?"Lowest available YouTube quality requested for loaded panes."
+    :"YouTube quality set to Auto.";
+});
 $("refresh").onclick=()=>panes.forEach(reloadPane);
 $("play").onclick=async()=>{
   const youtubePanes=panes.filter(p=>p.ytId);
