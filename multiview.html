@@ -576,10 +576,6 @@ $("stop").onclick=()=>panes.forEach(p=>{
   if(p.player){p.player.pauseVideo();setState(p,"paused")}
 });
 $("restore").onclick=restoreSession;
-$("clear-history").onclick=()=>{
-  try{localStorage.removeItem(HISTORY_KEY)}catch(e){}
-  renderHistory();
-};
 $("clear").onclick=()=>{
   if(ytObserver){try{ytObserver.disconnect()}catch(e){} ytObserver=null}
   ytInitQueue=[];
