@@ -833,7 +833,6 @@ function setLanguage(lang){
   document.querySelector(".urdu-title").style.display=currentLang==="ur"?"block":"none";
   document.querySelector(".hero").dir=currentLang==="ur"?"rtl":"ltr";
   document.querySelector(".urdu-sub").style.display=currentLang==="ur"?"block":"none";
-  const labels=document.querySelectorAll(".controls label");
   const playlistLabel=document.querySelector('label[for="playlist-url"]');
   if(playlistLabel)playlistLabel.textContent=tr("playlistLabel");
   const urlsLabel=document.querySelector('label[for="urls"]');
@@ -855,7 +854,6 @@ function setLanguage(lang){
   $("layers").nextElementSibling.textContent=tr("layersHelp");
   const playlistHelp=document.querySelector("#playlist-url")?.parentElement?.nextElementSibling;
   if(playlistHelp)playlistHelp.textContent=tr("playlistHelp");
-  updatePaneCount();
   $("mode").options[0].textContent=tr("qaLoop"); $("mode").options[1].textContent=tr("manual");
   $("quality").options[0].textContent=tr("auto"); $("quality").options[1].textContent=tr("lowest");
   $("quality-help").textContent=tr("qualityHelp");
