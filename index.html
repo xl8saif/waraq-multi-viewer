@@ -86,7 +86,9 @@ button.danger{color:#ffb0aa}
 .hidden{display:none!important}
 @media(max-width:850px){.controls{grid-template-columns:1fr}.hero{align-items:flex-start;flex-direction:column}.badge{display:none}}
 @media(max-width:520px){.shell{padding:20px 10px 30px}.settings{grid-template-columns:1fr}.controls{padding:10px}.pane-head{padding:8px}.pane-actions button{padding:5px 6px}}
-\n@keyframes rainbowFlow{0%{background-position:0% 50%;transform:translateX(0)}50%{background-position:200% 50%;transform:translateX(-3px)}100%{background-position:400% 50%;transform:translateX(0)}}\n@keyframes shinePulse{0%{filter:brightness(1) drop-shadow(0 0 2px rgba(255,255,255,.15))}100%{filter:brightness(1.35) drop-shadow(0 0 12px rgba(255,255,255,.28))}}\n@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+\n@keyframes rainbowFlow{0%{background-position:0% 50%;transform:translateX(0)}50%{background-position:200% 50%;transform:translateX(-3px)}100%{background-position:400% 50%;transform:translateX(0)}
+@keyframes shinePulse{0%{filter:brightness(1) drop-shadow(0 0 2px rgba(255,255,255,.15))}100%{filter:brightness(1.35) drop-shadow(0 0 12px rgba(255,255,255,.28))}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 
 .site-footer{margin-top:22px;border:1px solid var(--line);background:rgba(255,255,255,.055);box-shadow:0 20px 60px rgba(0,0,0,.28);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:20px;padding:18px}
 .site-footer-inner{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(180px,.7fr);gap:20px;align-items:center}
@@ -214,11 +216,14 @@ function normalize(raw){
 }
 function loadYTApi(){
   if(ytReady)return ytReady;
-  ytReady=new Promise(resolve=>{
+  ytReady=new Promise((resolve,reject)=>{
     if(window.YT&&window.YT.Player){resolve();return}
     window.onYouTubeIframeAPIReady=()=>resolve();
     const s=document.createElement("script");
     s.src="https://www.youtube.com/iframe_api";
+    s.async=true;
+    s.onload=()=>{if(window.YT&&window.YT.Player)resolve()};
+    s.onerror=()=>reject(new Error("YouTube IFrame API failed to load"));
     document.head.appendChild(s);
   });
   return ytReady;
@@ -314,11 +319,13 @@ function processYouTubeQueue(){
   if(!p){ytInitRunning=false;return}
   ytInitRunning=true;
   requestAnimationFrame(()=>{
-    initYouTube(p).finally(()=>{
-      p.queued=false;
-      ytInitRunning=false;
-      setTimeout(processYouTubeQueue,40);
-    });
+    initYouTube(p)
+      .catch(()=>setState(p,"player error","error"))
+      .finally(()=>{
+        p.queued=false;
+        ytInitRunning=false;
+        setTimeout(processYouTubeQueue,40);
+      });
   });
 }
 function observeYouTube(p){
@@ -456,10 +463,22 @@ $("play").onclick=async()=>{
   if(!youtubePanes.length){status.textContent="No YouTube panes are available to play.";return}
   youtubePanes.forEach(p=>queueYouTube(p));
   status.textContent="Preparing "+youtubePanes.length+" YouTube pane(s)…";
-  await loadYTApi();
-  await new Promise(resolve=>{const check=()=>youtubePanes.every(p=>p.player)?resolve():setTimeout(check,40);check()});
+  try{await loadYTApi()}catch(e){
+    status.textContent="YouTube player API could not be loaded. Check your connection or content-blocking settings.";
+    return;
+  }
+  await new Promise(resolve=>{
+    const startedAt=Date.now();
+    const check=()=>{
+      if(youtubePanes.every(p=>p.player||p.state.classList.contains("error")) || Date.now()-startedAt>=15000) return resolve();
+      setTimeout(check,80);
+    };
+    check();
+  });
   let started=0;
-  youtubePanes.forEach(p=>{try{p.player.playVideo();started++}catch(e){}});
+  youtubePanes.forEach(p=>{
+    if(p.player)try{p.player.playVideo();started++}catch(e){setState(p,"player error","error")}
+  });
   status.textContent="Play command sent to "+started+" YouTube pane(s). Browser autoplay policy may require user interaction or muted playback.";
 };
 $("mute").onclick=()=>{
