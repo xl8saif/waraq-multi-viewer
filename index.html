@@ -41,7 +41,7 @@ button{cursor:pointer}
 .playlist-input button{white-space:nowrap}
 .field-help{margin-top:7px;color:#85858c;font-size:10px;line-height:1.4}
 @media(max-width:560px){.playlist-input{flex-direction:column}.playlist-input button{width:100%}}
-.viewer-settings{margin-top:16px}
+.viewer-settings{margin-top:16px;grid-column:1/-1}
 .settings{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .setting-card{min-width:0;padding:14px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.045);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
 .setting-card label{display:block;margin:0 0 9px;font-size:10px;font-weight:700;letter-spacing:.09em;color:#d4d4d8}
@@ -52,12 +52,12 @@ button{cursor:pointer}
 .setting-unit{font-size:11px;color:var(--muted)}
 .pane-total{min-height:42px;display:flex;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:rgba(0,0,0,.28);color:var(--ink);font-size:12px;font-weight:600}
 .setting-help{margin-top:8px;color:#85858c;font-size:10px;line-height:1.35}
-.actions{display:flex;align-items:stretch;flex-wrap:wrap;gap:10px;margin-top:14px}
-.action-group{display:flex;gap:7px;padding:4px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.035);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+.actions{display:flex;align-items:stretch;flex-wrap:wrap;gap:10px;margin-top:14px;width:100%}
+.action-group{display:flex;flex:1;gap:7px;padding:4px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.035);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
 .action-group button{min-height:40px;padding:9px 14px;border-radius:11px}
-.primary-group{background:rgba(255,255,255,.055)}
-.playback-group{background:rgba(255,255,255,.035)}
-.utility-group{margin-left:auto;background:rgba(255,255,255,.025)}
+.primary-group{background:rgba(255,255,255,.055);justify-content:stretch}
+.playback-group{background:rgba(255,255,255,.035);justify-content:stretch}
+.utility-group{margin-left:0;background:rgba(255,255,255,.025);justify-content:stretch}
 .utility-group #clear{color:#ff6b6b}
 .actions #play{background:#ff0000;border-color:#ff0000;color:#fff}
 .actions #play:hover{background:#cc0000}
@@ -210,7 +210,7 @@ h1{font-size:clamp(32px,4.2vw,52px);margin-bottom:4px}
 .field-help{margin-top:4px;font-size:9px}
 .controls textarea{min-height:70px;padding:8px 10px;border-radius:9px;font-size:12px}
 .controls label{font-size:9px;margin-bottom:4px}
-.viewer-settings{margin-top:8px}
+.viewer-settings{margin-top:8px;grid-column:1/-1}
 .settings{gap:7px}
 .setting-card{padding:8px 9px;border-radius:11px}
 .setting-card label{margin-bottom:5px;font-size:9px}
@@ -219,7 +219,7 @@ h1{font-size:clamp(32px,4.2vw,52px);margin-bottom:4px}
 .setting-unit{font-size:9px}
 .actions{gap:6px;margin-top:8px}
 .action-group{gap:4px;padding:3px;border-radius:10px}
-.action-group button,.actions button{min-height:32px;padding:6px 9px;border-radius:8px;font-size:11px}
+.action-group button,.actions button{min-height:32px;flex:1;padding:6px 9px;border-radius:8px;font-size:11px}
 .status{min-height:16px;margin-top:6px;font-size:10px}
 .history{margin-top:6px;padding:7px}
 .help{margin-top:8px;font-size:10px;line-height:1.35}
@@ -253,7 +253,7 @@ h1{font-size:clamp(32px,4.2vw,52px);margin-bottom:4px}
   .actions{display:flex}
   .action-group{width:auto}
   .utility-group{margin-left:0}
-  .action-group button{flex:0 0 auto}
+  .action-group button{flex:1}
 }
 @media(max-width:400px){
   .settings{grid-template-columns:1fr 1fr}
