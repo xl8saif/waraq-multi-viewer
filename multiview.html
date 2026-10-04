@@ -28,7 +28,7 @@ button{cursor:pointer}
 .sub{margin:0;color:var(--muted);max-width:760px}
 
 .urdu-sub{display:none;font-family:"Noto Nastaliq Urdu","Noto Naskh Arabic","Jameel Noori Nastaleeq",serif;font-size:14px;line-height:2;text-align:right}
-.lang-switch{display:flex;align-items:center;gap:6px;margin-top:10px}
+.lang-switch{display:flex;align-items:center;gap:6px;margin-top:10px}.lang-switch{position:relative;z-index:20;pointer-events:auto}.lang-switch button{position:relative;z-index:21;pointer-events:auto;touch-action:manipulation}
 .lang-switch button{padding:6px 10px;border-radius:999px;font-size:11px}
 .lang-switch button.active{background:var(--accent);border-color:var(--accent)}
 .badge{white-space:nowrap;border:1px solid var(--line);background:rgba(255,255,255,.06);
@@ -504,17 +504,85 @@ $("clear").onclick=()=>{
 window.addEventListener("resize",()=>{if(panes.length)layout(panes.length)});
 
 const langButtons=document.querySelectorAll("[data-lang]");
-function setLanguage(lang){
-  document.documentElement.lang=lang==="ur"?"ur":"en";
-  document.querySelector(".sub").style.display=lang==="ur"?"none":"block";
-  document.querySelector(".en-title").style.display=lang==="ur"?"none":"inline-block";
-  document.querySelector(".urdu-title").style.display=lang==="ur"?"block":"none";
-  document.querySelector(".hero").dir=lang==="ur"?"rtl":"ltr";
-  document.querySelector(".urdu-sub").style.display=lang==="ur"?"block":"none";
-  langButtons.forEach(b=>b.classList.toggle("active",b.dataset.lang===lang));
-  try{localStorage.setItem("waraq-multiviewer-lang",lang)}catch(e){}
+const i18n={
+  en:{
+    urlsLabel:"VIDEO / PAGE URLS — one per line", urlsPlaceholder:"https://www.youtube.com/watch?v=VIDEO_ID\\nhttps://youtu.be/VIDEO_ID\\nhttps://example.com",
+    layers:"QA LAYERS", layersHelp:"Repeats the URL set for parallel player and localization testing.", total:"TOTAL PANES", totalEmpty:"Enter URLs to see total panes",
+    playback:"PLAYBACK", qaLoop:"Test loop on video end", manual:"Manual", quality:"VIDEO QUALITY", auto:"Auto", lowest:"Lowest available resolution", qualityHelp:"Forces YouTube panes toward the lowest quality available for the video.",
+    load:"Load panes", refresh:"Reload all", play:"Play all", stop:"Stop all", mute:"Mute all", clear:"Clear",
+    recent:"RECENT / QUICK START", restore:"Restore last session", clearHistory:"Clear history", siteVisitors:"SITE VISITORS",
+    kicker:"A PROJECT OF WARAQ ENTERPRISES, GILGIT", developed:"Developed & Vibe Coded by Saif Ullah Jailani", address:"Waraq Enterprises, KIU Road, Court Area, Konodass, Gilgit, Pakistan - 15100",
+    help:"YouTube panes use the official embedded player. QA Layers repeats the same URL set across parallel panes for player, localization, layout, buffering and load testing. When multiple layers are selected, autoplay is disabled so duplicated panes remain test instances rather than artificial engagement activity. Some websites block iframe embedding.",
+    empty:"Paste URLs above and select Load panes. Each URL creates one connected pane.", enter:"Enter at least one valid URL.",
+    loaded:"Loaded {n} pane(s).", loadedLayers:"Loaded {n} pane(s) across {l} QA layers. Autoplay is disabled for layered testing.",
+    lastRestored:"Last session restored.", noYoutube:"No YouTube panes are available to play.", preparing:"Preparing {n} YouTube pane(s)…",
+    apiFail:"YouTube player API could not be loaded. Check your connection or content-blocking settings.",
+    playSent:"Play command sent to {n} YouTube pane(s). Browser autoplay policy may require user interaction or muted playback.",
+    muted:"Muted {n} YouTube pane(s).", lowestStatus:"Lowest available YouTube quality requested for loaded panes.", autoStatus:"YouTube quality set to Auto.",
+    paneReady:"ready", pressPlay:"ready · press Play all", loading:"loading", web:"web page", reloading:"reloading", reloaded:"reloaded", playing:"playing", paused:"paused", buffering:"buffering", ended:"ended", error:"player error",
+    remove:"Remove from history", youtube:"YouTube", layer:"Layer"
+  },
+  ur:{
+    urlsLabel:"ویڈیو / صفحے کے لنکس — ہر سطر میں ایک", urlsPlaceholder:"https://www.youtube.com/watch?v=VIDEO_ID\\nhttps://youtu.be/VIDEO_ID\\nhttps://example.com",
+    layers:"ٹیسٹنگ لیئرز", layersHelp:"متوازی پلیئر اور لوکلائزیشن ٹیسٹنگ کے لیے لنکس کے مجموعے کو دہرائیں۔", total:"کل پینلز", totalEmpty:"کل پینلز دیکھنے کے لیے لنکس درج کریں",
+    playback:"پلے بیک", qaLoop:"ویڈیو ختم ہونے پر دوبارہ چلائیں", manual:"دستی", quality:"ویڈیو کوالٹی", auto:"خودکار", lowest:"دستیاب کم ترین ریزولوشن", qualityHelp:"یوٹیوب پینلز کو ویڈیو کی دستیاب کم ترین کوالٹی پر چلانے کی کوشش کرتا ہے۔",
+    load:"پینلز لوڈ کریں", refresh:"سب دوبارہ لوڈ کریں", play:"سب چلائیں", stop:"سب روکیں", mute:"سب خاموش کریں", clear:"صاف کریں",
+    recent:"حالیہ / فوری آغاز", restore:"آخری سیشن بحال کریں", clearHistory:"تاریخ صاف کریں", siteVisitors:"سائٹ کے ملاحظات",
+    kicker:"ورق انٹرپرائزز، گلگت کا منصوبہ", developed:"تیار کردہ اور وائِب کوڈ کردہ: سیف اللہ جیلانی", address:"ورق انٹرپرائزز، کے آئی یو روڈ، کورٹ ایریا، کونوداس، گلگت، پاکستان - 15100",
+    help:"یوٹیوب پینلز آفیشل ایمبیڈڈ پلیئر استعمال کرتے ہیں۔ ٹیسٹنگ لیئرز پلیئر، لوکلائزیشن، لے آؤٹ، بفرنگ اور لوڈ ٹیسٹنگ کے لیے ایک ہی لنکس کو متوازی پینلز میں دہراتی ہیں۔ متعدد لیئرز منتخب ہونے پر آٹو پلے بند رہتا ہے۔ کچھ ویب سائٹس iframe ایمبیڈنگ کی اجازت نہیں دیتیں۔",
+    empty:"اوپر لنکس درج کریں اور پینلز لوڈ کریں منتخب کریں۔ ہر لنک ایک منسلک پینل بناتا ہے۔", enter:"کم از کم ایک درست لنک درج کریں۔",
+    loaded:"{n} پینل لوڈ ہو گئے۔", loadedLayers:"{n} پینل {l} ٹیسٹنگ لیئرز میں لوڈ ہو گئے۔ لیئرڈ ٹیسٹنگ کے دوران آٹو پلے بند ہے۔",
+    lastRestored:"آخری سیشن بحال کر دیا گیا۔", noYoutube:"چلانے کے لیے کوئی یوٹیوب پینل دستیاب نہیں۔", preparing:"{n} یوٹیوب پینل تیار کیے جا رہے ہیں…",
+    apiFail:"یوٹیوب پلیئر API لوڈ نہیں ہو سکی۔ اپنا کنکشن یا مواد روکنے والی سیٹنگز چیک کریں۔",
+    playSent:"{n} یوٹیوب پینلز کو چلانے کا حکم بھیج دیا گیا۔ براؤزر کی آٹو پلے پالیسی کے باعث صارف کی کارروائی یا خاموش پلے بیک درکار ہو سکتا ہے۔",
+    muted:"{n} یوٹیوب پینلز خاموش کر دیے گئے۔", lowestStatus:"لوڈ شدہ پینلز کے لیے یوٹیوب کی دستیاب کم ترین کوالٹی طلب کی گئی۔", autoStatus:"یوٹیوب ویڈیو کوالٹی خودکار پر مقرر ہے۔",
+    paneReady:"تیار", pressPlay:"تیار · سب چلائیں دبائیں", loading:"لوڈ ہو رہا ہے", web:"ویب صفحہ", reloading:"دوبارہ لوڈ ہو رہا ہے", reloaded:"دوبارہ لوڈ ہو گیا", playing:"چل رہا ہے", paused:"موقوف", buffering:"بفرنگ", ended:"ختم", error:"پلیئر میں خرابی",
+    remove:"تاریخ سے حذف کریں", youtube:"یوٹیوب", layer:"لیئر"
+  }
+};
+let currentLang="en";
+function tr(key,vars={}){
+  let s=(i18n[currentLang]&&i18n[currentLang][key])||i18n.en[key]||key;
+  return s.replace(/\\{(\\w+)\\}/g,(_,k)=>vars[k]??"");
 }
-langButtons.forEach(b=>b.addEventListener("click",()=>setLanguage(b.dataset.lang)));
+function setText(el,key){if(el)el.textContent=tr(key)}
+function setLanguage(lang){
+  currentLang=lang==="ur"?"ur":"en";
+  document.documentElement.lang=currentLang;
+  document.documentElement.dir=currentLang==="ur"?"rtl":"ltr";
+  document.querySelector(".sub").style.display=currentLang==="ur"?"none":"block";
+  document.querySelector(".en-title").style.display=currentLang==="ur"?"none":"inline-block";
+  document.querySelector(".urdu-title").style.display=currentLang==="ur"?"block":"none";
+  document.querySelector(".hero").dir=currentLang==="ur"?"rtl":"ltr";
+  document.querySelector(".urdu-sub").style.display=currentLang==="ur"?"block":"none";
+  const labels=document.querySelectorAll(".controls label");
+  if(labels[0])labels[0].textContent=tr("urlsLabel");
+  if(labels[1])labels[1].textContent=tr("layers");
+  if(labels[2])labels[2].textContent=tr("total");
+  if(labels[3])labels[3].textContent=tr("playback");
+  if(labels[4])labels[4].textContent=tr("quality");
+  $("urls").placeholder=tr("urlsPlaceholder");
+  $("layers").nextElementSibling.textContent=tr("layersHelp");
+  $("pane-count").textContent=$("urls").value.trim()?$("pane-count").textContent:tr("totalEmpty");
+  $("mode").options[0].textContent=tr("qaLoop"); $("mode").options[1].textContent=tr("manual");
+  $("quality").options[0].textContent=tr("auto"); $("quality").options[1].textContent=tr("lowest");
+  $("quality-help").textContent=tr("qualityHelp");
+  $("load").textContent=tr("load"); $("refresh").textContent=tr("refresh"); $("play").textContent=tr("play");
+  $("stop").textContent=tr("stop"); $("mute").textContent=tr("mute"); $("clear").textContent=tr("clear");
+  document.querySelector(".history-head strong").textContent=tr("recent");
+  $("restore").textContent=tr("restore"); $("clear-history").textContent=tr("clearHistory");
+  document.querySelector(".footer-kicker").textContent=tr("kicker");
+  document.querySelector(".footer-brand strong").textContent=tr("developed");
+  document.querySelector(".footer-brand span").textContent=tr("address");
+  document.querySelector(".footer-visitors .footer-kicker").textContent=tr("siteVisitors");
+  document.querySelector(".help").textContent=tr("help");
+  document.querySelector("#grid .empty")?.replaceChildren(document.createTextNode(tr("empty")));
+  langButtons.forEach(b=>b.classList.toggle("active",b.dataset.lang===currentLang));
+  renderHistory(); updatePaneCount();
+  try{localStorage.setItem("waraq-multiviewer-lang",currentLang)}catch(e){}
+}
+langButtons.forEach(b=>b.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();setLanguage(b.dataset.lang)}));
+document.addEventListener("keydown",e=>{if(e.target.matches("[data-lang]")&&(e.key==="Enter"||e.key===" ")){e.preventDefault();setLanguage(e.target.dataset.lang)}});
 try{setLanguage(localStorage.getItem("waraq-multiviewer-lang")||"en")}catch(e){setLanguage("en")}
 updatePaneCount();
 renderHistory();
