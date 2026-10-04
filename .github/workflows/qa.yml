@@ -145,6 +145,39 @@ jobs:
 
             await page.waitForTimeout(2500);
 
+            const totalText = await page.locator('#pane-count').innerText();
+            if (!totalText.includes('1')) throw new Error('Total pane counter did not update for one URL: ' + totalText);
+
+            const speedOptions = await page.locator('#speed option').allTextContents();
+            for (const expected of ['0.25×','0.5×','0.75×','1× Normal','1.25×','1.5×','2×','4×','6×','8×','10×']) {
+              if (!speedOptions.includes(expected)) throw new Error('Missing speed option: ' + expected);
+            }
+
+            for (const id of ['#performance-monitor','#perf-panes','#perf-playing','#perf-loaded','#perf-memory','#perf-fps']) {
+              if (!(await page.locator(id).count())) throw new Error('Missing performance monitor element: ' + id);
+            }
+
+            await page.locator('#layers').fill('2');
+            const layeredCounter = await page.locator('#pane-count').innerText();
+            if (!layeredCounter.includes('2')) throw new Error('Total pane counter did not update for 2 QA layers: ' + layeredCounter);
+
+            await page.getByRole('button', {name: 'اردو'}).click();
+            await page.waitForTimeout(100);
+            const urduLabel = await page.locator('label[for="urls"]').innerText();
+            const urduTotal = await page.locator('label').filter({hasText: 'کل پینلز'}).count();
+            if (!urduLabel.includes('ویڈیو')) throw new Error('Urdu URL label did not switch correctly.');
+            if (!urduTotal) throw new Error('Urdu total panes label did not switch correctly.');
+
+            await page.getByRole('button', {name: 'EN'}).click();
+
+            const ownOrigin = new URL(url).origin;
+            const ownFailedRequests = failedRequests.filter(item => {
+              try { return new URL(item.split(' ')[1]).origin === ownOrigin; } catch { return false; }
+            });
+            if (ownFailedRequests.length) {
+              throw new Error('Published-site requests failed:\\n' + ownFailedRequests.join('\\n'));
+            }
+
             if (consoleErrors.length) {
               throw new Error('Browser console errors:\\n' + consoleErrors.join('\\n'));
             }
@@ -153,7 +186,10 @@ jobs:
               url,
               httpStatus: response.status(),
               paneCount,
+              totalText,
+              layeredCounter,
               consoleErrors,
+              ownFailedRequests,
               failedRequests
             }, null, 2));
 
