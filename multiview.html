@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Multi-pane site viewer</title>
+<style>
+:root{--bg:#eef0ec;--panel:#fbfbf8;--ink:#1d2421;--mute:#5f6b66;--line:#c9d0ca;--acc:#1f6f5c;--accink:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1a2020;--panel:#222a29;--ink:#e6ece8;--mute:#98a6a0;--line:#37423f;--acc:#59c2a5;--accink:#10201b}}
+:root[data-theme="dark"]{--bg:#1a2020;--panel:#222a29;--ink:#e6ece8;--mute:#98a6a0;--line:#37423f;--acc:#59c2a5;--accink:#10201b}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Trebuchet MS",Verdana,sans-serif}
+header{padding:16px 16px 0;max-width:1400px;margin:0 auto}
+h1{font:700 22px/1.2 Georgia,"Times New Roman",serif;margin:0 0 4px}
+p.sub{margin:0 0 12px;color:var(--mute);max-width:70ch}
+.bar{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:12px;padding:12px;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+@media(max-width:720px){.bar{grid-template-columns:1fr}}
+textarea{width:100%;min-height:96px;resize:vertical;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:13px/1.4 Consolas,monospace}
+label{display:block;font-size:13px;color:var(--mute);margin:0 0 4px}
+select,input[type=number]{width:100%;padding:7px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+button{padding:8px 14px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;cursor:pointer}
+button.primary{background:var(--acc);color:var(--accink);border-color:var(--acc);font-weight:700}
+button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+#msg{margin:8px 0 0;font-size:13px;color:var(--mute);min-height:1.2em}
+#grid{display:grid;gap:10px;padding:12px 16px 16px;max-width:1400px;margin:0 auto}
+.pane{background:var(--panel);border:1px solid var(--line);border-radius:8px;display:flex;flex-direction:column;min-height:300px;overflow:hidden}
+.pane .hd{display:flex;align-items:center;gap:8px;padding:6px 8px;border-bottom:1px solid var(--line);font-size:12px}
+.pane .hd .u{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mute)}
+.pane .hd .t{font-variant-numeric:tabular-nums;color:var(--acc);font-weight:700}
+.pane .hd button,.pane .hd a{padding:2px 8px;font-size:12px;color:var(--ink)}
+.pane iframe{flex:1;width:100%;border:0;background:#fff;min-height:260px}
+.empty{padding:32px 16px;text-align:center;color:var(--mute)}
+.note{padding:0 16px 16px;max-width:1400px;margin:0 auto;font-size:13px;color:var(--mute)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Multi-pane site viewer</h1>
+  <p class="sub">Paste one URL per line, choose how many panes to show, and set how often each pane reloads. Useful for dashboards, status pages, and monitoring screens.</p>
+  <div class="bar">
+    <div>
+      <label for="urls">URLs (one per line)</label>
+      <textarea id="urls" placeholder="https://example.com&#10;https://status.example.org"></textarea>
+    </div>
+    <div>
+      <div class="row">
+        <div><label for="count">Panes</label>
+          <select id="count"><option>4</option><option>6</option><option>10</option></select></div>
+        <div><label for="every">Refresh every</label>
+          <select id="every">
+            <option value="0">Off</option>
+            <option value="5">5 seconds</option>
+            <option value="30">30 seconds</option>
+            <option value="60">1 minute</option>
+            <option value="300" selected>5 minutes</option>
+            <option value="600">10 minutes</option>
+            <option value="1200">20 minutes</option>
+            <option value="1800">30 minutes</option>
+            <option value="custom">Custom…</option>
+          </select></div>
+      </div>
+      <div class="row" id="customRow" hidden>
+        <div><label for="custom">Custom (seconds)</label><input id="custom" type="number" min="5" value="90"></div>
+      </div>
+      <div class="btns">
+        <button class="primary" id="go">Load panes</button>
+        <button id="now">Refresh all now</button>
+        <button id="stop">Stop timers</button>
+      </div>
+    </div>
+  </div>
+  <div id="msg" role="status"></div>
+</header>
+<div id="grid"><div class="empty">Add URLs above and press Load panes.</div></div>
+<p class="note">Some sites refuse to be shown inside another page. If a pane stays blank, use its Open link to view that site in a tab.</p>
+<script>
+var grid=document.getElementById('grid'),msg=document.getElementById('msg'),
+    every=document.getElementById('every'),custom=document.getElementById('custom'),
+    panes=[],tick=null;
+
+every.addEventListener('change',function(){document.getElementById('customRow').hidden=every.value!=='custom'});
+
+function interval(){
+  var v=every.value==='custom'?parseInt(custom.value,10):parseInt(every.value,10);
+  if(isNaN(v)||v<0)return 0;
+  return v===0?0:Math.max(5,v);
+}
+function norm(u){
+  u=u.trim(); if(!u)return null;
+  if(!/^https?:\/\//i.test(u))u='https://'+u;
+  try{return new URL(u).href}catch(e){return null}
+}
+function fmt(s){var m=Math.floor(s/60),r=s%60;return m+':'+(r<10?'0':'')+r}
+function cols(n){return n<=4?2:(n<=6?3:4)}
+
+function build(){
+  stop();
+  var n=parseInt(document.getElementById('count').value,10);
+  var list=document.getElementById('urls').value.split(/\n+/).map(norm).filter(Boolean);
+  if(!list.length){msg.textContent='Enter at least one valid URL.';return}
+  var extra=list.length>n?list.length-n:0;
+  list=list.slice(0,n);
+  grid.innerHTML='';panes=[];
+  grid.style.gridTemplateColumns='repeat(auto-fit,minmax(min(100%,'+(n>6?320:380)+'px),1fr))';
+  list.forEach(function(u){
+    var el=document.createElement('div');el.className='pane';
+    var hd=document.createElement('div');hd.className='hd';
+    var us=document.createElement('span');us.className='u';us.textContent=u;us.title=u;
+    var t=document.createElement('span');t.className='t';
+    var rb=document.createElement('button');rb.textContent='Reload';
+    var a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Open';
+    hd.append(us,t,rb,a);
+    var f=document.createElement('iframe');f.src=u;f.title=u;f.loading='lazy';
+    f.referrerPolicy='no-referrer';
+    f.setAttribute('sandbox','allow-scripts allow-same-origin allow-forms allow-popups');
+    el.append(hd,f);grid.appendChild(el);
+    var p={url:u,frame:f,label:t,left:0};
+    rb.addEventListener('click',function(){reload(p)});
+    panes.push(p);
+  });
+  msg.textContent=extra?('Showing '+n+' panes; '+extra+' extra URL(s) ignored.'):('Loaded '+panes.length+' pane(s).');
+  start();
+}
+function reload(p){
+  var s=p.url;p.frame.src='about:blank';
+  setTimeout(function(){p.frame.src=s},50);
+  p.left=interval();
+}
+function start(){
+  var s=interval();
+  panes.forEach(function(p){p.left=s;p.label.textContent=s?fmt(s):'manual'});
+  if(!s)return;
+  tick=setInterval(function(){
+    panes.forEach(function(p){
+      p.left--;
+      if(p.left<=0){reload(p)}
+      p.label.textContent=fmt(Math.max(p.left,0));
+    });
+  },1000);
+}
+function stop(){
+  if(tick){clearInterval(tick);tick=null}
+  panes.forEach(function(p){p.label.textContent='stopped'});
+}
+document.getElementById('go').addEventListener('click',build);
+document.getElementById('now').addEventListener('click',function(){panes.forEach(reload)});
+document.getElementById('stop').addEventListener('click',function(){stop();msg.textContent='Timers stopped. Press Load panes to restart.'});
+</script>
+</body>
+</html>
