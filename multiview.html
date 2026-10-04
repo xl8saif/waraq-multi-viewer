@@ -87,7 +87,7 @@ https://example.com"></textarea>
     </div>
     <div>
       <div class="settings">
-        <div><label for="count">PANES</label><select id="count"><option value="4">4</option><option value="6">6</option><option value="10">10</option></select></div>
+        <div><label>CONNECTED PANES</label><div style="padding:11px 12px;border:1px solid var(--line);border-radius:13px;background:rgba(0,0,0,.28);color:var(--muted);font-size:12px">One pane per URL</div></div>
         <div><label for="mode">PLAYBACK</label><select id="mode">
           <option value="qa-loop" selected>Test loop on video end</option>
           <option value="manual">Manual</option>
@@ -97,13 +97,14 @@ https://example.com"></textarea>
         <button class="primary" id="load">Load panes</button>
         <button id="refresh">Reload all</button>
         <button id="stop">Stop all</button>
+        <button id="mute">Mute all</button>
         <button id="clear" class="danger">Clear</button>
       </div>
       <div id="status" class="status" role="status" aria-live="polite"></div>
     </div>
   </section>
 
-  <div id="grid"><div class="glass empty">Paste URLs above and select <b>Load panes</b>.</div></div>
+  <div id="grid"><div class="glass empty">Paste URLs above and select <b>Load panes</b>. Each URL creates one connected pane.</div></div>
   <p class="help">YouTube panes use the official embedded player. In Test loop mode, a video is restarted after its player reports <code>ENDED</code>; this is intended for player/localization QA, not for manufacturing engagement or watch-time metrics. Some websites block iframe embedding.</p>
 </main>
 
@@ -144,7 +145,7 @@ function loadYTApi(){
   return ytReady;
 }
 function layout(n){
-  const cols=n<=4?2:n<=6?3:4;
+  const cols=n<=1?1:n<=4?2:n<=9?3:4;
   grid.style.gridTemplateColumns="repeat("+cols+",minmax(0,1fr))";
 }
 function setState(p,text,kind=""){
@@ -220,9 +221,8 @@ function build(){
   panes.forEach(p=>{if(p.player){try{p.player.destroy()}catch(e){}}});
   panes=[];
   const urls=$("urls").value.split(/\n+/).map(normalize).filter(Boolean);
-  const n=parseInt($("count").value,10);
   if(!urls.length){grid.innerHTML='<div class="glass empty">Enter at least one valid URL.</div>';status.textContent="";return}
-  const shown=urls.slice(0,n);
+  const shown=urls;
   grid.innerHTML="";
   layout(shown.length);
   shown.forEach((u,i)=>{const p=makePane(u,i);panes.push(p);grid.appendChild(p.el)});
@@ -231,6 +231,11 @@ function build(){
 }
 $("load").onclick=build;
 $("refresh").onclick=()=>panes.forEach(reloadPane);
+$("mute").onclick=()=>{
+  let muted=0;
+  panes.forEach(p=>{if(p.player&&typeof p.player.mute==="function"){p.player.mute();muted++}});
+  status.textContent="Muted "+muted+" YouTube pane(s).";
+};
 $("stop").onclick=()=>panes.forEach(p=>{
   if(p.player){p.player.pauseVideo();setState(p,"paused")}
 });
