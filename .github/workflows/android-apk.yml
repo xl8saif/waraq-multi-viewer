@@ -5,7 +5,10 @@ on:
     branches: ["main"]
     paths:
       - "multiview.html"
-      - "android/**"
+      - "app/**"
+      - "build.gradle"
+      - "settings.gradle"
+      - "gradle.properties"
       - ".github/workflows/android-apk.yml"
   workflow_dispatch:
 
@@ -32,19 +35,13 @@ jobs:
           curl -fsSL https://services.gradle.org/distributions/gradle-8.9-bin.zip -o /tmp/gradle.zip
           unzip -q /tmp/gradle.zip -d /tmp
       - name: Prepare web asset
-        run: mkdir -p android/app/src/main/assets && cp multiview.html android/app/src/main/assets/multiview.html
+        run: mkdir -p app/src/main/assets && cp multiview.html app/src/main/assets/multiview.html
       - name: Build debug APK
-        working-directory: android
         run: /tmp/gradle-8.9/bin/gradle --no-daemon assembleDebug
       - name: Rename APK
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk Waraq-Multi-Viewer.apk
-      - name: Upload APK artifact
+        run: cp app/build/outputs/apk/debug/app-debug.apk Waraq-Multi-Viewer.apk
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Waraq-Multi-Viewer-APK
           path: Waraq-Multi-Viewer.apk
-      - name: Upload APK to release-style artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Waraq-Multi-Viewer-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
