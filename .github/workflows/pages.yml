@@ -10,8 +10,10 @@ permissions:
   pages: write
   id-token: write
 
+# GitHub Pages deployment is triggered on every main-branch push.
+# Keep this workflow independent from the Vercel check.
 concurrency:
-  group: "pages"
+  group: "github-pages"
   cancel-in-progress: false
 
 jobs:
