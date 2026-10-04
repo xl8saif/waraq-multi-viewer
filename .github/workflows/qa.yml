@@ -63,8 +63,8 @@ jobs:
 
           const requiredIds = [
             'urls','layers','pane-count','mode','quality','load','refresh',
-            'play','stop','mute','clear','status','history','history-list',
-            'restore','clear-history','grid'
+            'play','stop','mute','clear','status','history',
+            'restore','playlist-url','load-playlist','grid'
           ];
           for (const id of requiredIds) {
             if (!index.includes('id="' + id + '"') && !index.includes("id='" + id + "'")) {
@@ -126,9 +126,14 @@ jobs:
             if (!title || !title.includes('Waraq Multi-Viewer Platform')) {
               throw new Error('Unexpected page title/hero.');
             }
-            for (const label of ['Load panes','Play all','Stop all','Mute all','Clear','QA LAYERS']) {
+            for (const label of ['Load panes','Load playlist','Play all','Stop all','Mute all','Clear','QA LAYERS','YOUTUBE PLAYLIST URL']) {
               if (!bodyText.includes(label)) throw new Error('Missing UI control: ' + label);
             }
+
+            await page.locator('#playlist-url').fill('not-a-youtube-playlist');
+            await page.locator('#load-playlist').click();
+            const playlistStatus = await page.locator('#status').textContent();
+            if (!playlistStatus || !playlistStatus.includes('valid YouTube playlist')) throw new Error('Playlist validation did not run.');
 
             await page.locator('#urls').fill('https://www.youtube.com/watch?v=M7lc1UVf-VE');
             await page.locator('#layers').fill('1');
