@@ -185,6 +185,9 @@ const $=id=>document.getElementById(id);
 const grid=$("grid"), status=$("status");
 let panes=[];
 let ytReady=null;
+let ytObserver=null;
+let ytInitQueue=[];
+let ytInitRunning=false;
 
 function getYouTubeId(raw){
   try{
@@ -294,6 +297,39 @@ function setState(p,text,kind=""){
   p.state.textContent=text;
   p.state.className="pane-state "+kind;
 }
+function queueYouTube(p){
+  if(p.player||p.queued)return;
+  p.queued=true;
+  ytInitQueue.push(p);
+  processYouTubeQueue();
+}
+function processYouTubeQueue(){
+  if(ytInitRunning)return;
+  const p=ytInitQueue.shift();
+  if(!p){ytInitRunning=false;return}
+  ytInitRunning=true;
+  requestAnimationFrame(()=>{
+    initYouTube(p).finally(()=>{
+      p.queued=false;
+      ytInitRunning=false;
+      setTimeout(processYouTubeQueue,40);
+    });
+  });
+}
+function observeYouTube(p){
+  if(!p.ytId)return;
+  if(!ytObserver){
+    ytObserver=new IntersectionObserver(entries=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          const pane=panes.find(x=>x.el===entry.target);
+          if(pane){queueYouTube(pane);ytObserver.unobserve(entry.target)}
+        }
+      });
+    },{root:null,rootMargin:"700px 0px",threshold:0.01});
+  }
+  ytObserver.observe(p.el);
+}
 function makePane(url,index){
   const ytId=getYouTubeId(url);
   const el=document.createElement("article");
@@ -352,7 +388,7 @@ function reloadPane(p){
     box.innerHTML="";
     box.id=p.mountId;
     setState(p,"reloading");
-    initYouTube(p);
+    queueYouTube(p);
   }else{
     const f=p.el.querySelector("iframe");
     if(f)f.src=f.src;
@@ -385,22 +421,22 @@ function build(){
   status.textContent=layers>1
     ?"Loaded "+panes.length+" pane(s) across "+layers+" QA layers. Autoplay is disabled for layered testing."
     :"Loaded "+panes.length+" pane(s).";
-  panes.filter(p=>p.ytId).forEach(initYouTube);
+  panes.filter(p=>p.ytId).forEach(observeYouTube);
 }
 $("load").onclick=build;
 $("urls").addEventListener("input",updatePaneCount);
 $("layers").addEventListener("input",updatePaneCount);
 $("refresh").onclick=()=>panes.forEach(reloadPane);
-$("play").onclick=()=>{
+$("play").onclick=async()=>{
+  const youtubePanes=panes.filter(p=>p.ytId);
+  if(!youtubePanes.length){status.textContent="No YouTube panes are available to play.";return}
+  youtubePanes.forEach(p=>queueYouTube(p));
+  status.textContent="Preparing "+youtubePanes.length+" YouTube pane(s)…";
+  await loadYTApi();
+  await new Promise(resolve=>{const check=()=>youtubePanes.every(p=>p.player)?resolve():setTimeout(check,40);check()});
   let started=0;
-  panes.forEach(p=>{
-    if(p.player&&typeof p.player.playVideo==="function"){
-      try{p.player.playVideo();started++}catch(e){}
-    }
-  });
-  status.textContent=started
-    ?"Play command sent to "+started+" YouTube pane(s). Browser autoplay policy may require user interaction or muted playback."
-    :"No loaded YouTube players are available to play.";
+  youtubePanes.forEach(p=>{try{p.player.playVideo();started++}catch(e){}});
+  status.textContent="Play command sent to "+started+" YouTube pane(s). Browser autoplay policy may require user interaction or muted playback.";
 };
 $("mute").onclick=()=>{
   let muted=0;
@@ -416,6 +452,8 @@ $("clear-history").onclick=()=>{
   renderHistory();
 };
 $("clear").onclick=()=>{
+  if(ytObserver)panes.forEach(p=>{try{ytObserver.unobserve(p.el)}catch(e){}});
+  ytInitQueue=[];
   panes.forEach(p=>{if(p.player){try{p.player.destroy()}catch(e){}}});
   panes=[];grid.innerHTML='<div class="glass empty">Paste URLs above and select <b>Load panes</b>.</div>';status.textContent="";
 };
