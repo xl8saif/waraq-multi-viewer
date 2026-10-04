@@ -10,15 +10,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Alyamama:wght@300..900&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#050505;--panel:rgba(255,255,255,.075);--panel2:rgba(255,255,255,.045);
-  --ink:#f5f5f7;--muted:#a1a1aa;--line:rgba(255,255,255,.12);
-  --accent:#0a84ff;--danger:#ff453a;--ok:#30d158;--radius:20px
+  --bg:#06101d;--panel:rgba(17,30,48,.78);--panel2:rgba(11,23,38,.72);
+  --ink:#f5f7fb;--muted:#9aa8ba;--line:rgba(148,177,209,.16);
+  --accent:#3ea6ff;--accent2:#22d3ee;--danger:#ff3b30;--ok:#22c55e;--warn:#f5c542;--radius:16px
 }
 *{box-sizing:border-box}
 html{background:var(--bg);scroll-behavior:smooth}
 body{margin:0;min-height:100vh;background:
- radial-gradient(900px 500px at 50% -120px,rgba(10,132,255,.16),transparent 65%),
- linear-gradient(180deg,#080808 0%,#030303 100%);color:var(--ink);
+ radial-gradient(900px 500px at 50% -120px,rgba(62,166,255,.20),transparent 65%),
+ linear-gradient(180deg,#081321 0%,#040a12 100%);color:var(--ink);
  font:15px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
@@ -151,6 +151,46 @@ button, .circle, .control-circle, .pane-control, .icon-button {
     -2px -2px 6px rgba(255,255,255,.035);
 }
 
+/* Reference-inspired compact visual system */
+button{
+  border-color:rgba(126,176,220,.22);
+  background:linear-gradient(180deg,rgba(42,61,82,.88),rgba(20,34,51,.92));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 0 -1px 0 rgba(0,0,0,.45),0 5px 16px rgba(0,0,0,.22);
+}
+button:hover{
+  background:linear-gradient(180deg,rgba(58,84,111,.96),rgba(25,43,64,.96));
+  border-color:rgba(62,166,255,.48);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 0 0 1px rgba(62,166,255,.10),0 7px 20px rgba(0,0,0,.28),0 0 18px rgba(62,166,255,.10);
+}
+button:active{box-shadow:inset 2px 2px 5px rgba(0,0,0,.35),0 2px 8px rgba(0,0,0,.22)}
+button.primary,.actions #play{
+  background:linear-gradient(180deg,#ff3030,#d91515);
+  border-color:#ff3b30;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.20),0 5px 18px rgba(255,59,48,.18);
+}
+button.primary:hover,.actions #play:hover{background:linear-gradient(180deg,#ff4a43,#e51b1b);box-shadow:0 0 0 1px rgba(255,59,48,.22),0 8px 22px rgba(255,59,48,.20)}
+.actions #stop,.actions #mute{color:#d8e9f8}
+.actions #clear{color:#ff8d86}
+.glass,.setting-card,.action-group,.history,.pane{
+  background:linear-gradient(145deg,rgba(21,38,59,.76),rgba(8,18,31,.72));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.055),0 14px 38px rgba(0,0,0,.24);
+}
+.setting-card:focus-within{border-color:rgba(62,166,255,.40);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 0 1px rgba(62,166,255,.08)}
+.pane-head{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012))}
+.pane-num{background:linear-gradient(145deg,rgba(62,166,255,.24),rgba(34,211,238,.08));border:1px solid rgba(62,166,255,.22)}
+.pane-state.playing{color:#43e58a;text-shadow:0 0 10px rgba(34,197,94,.28)}
+.pane-state.error{color:#ff7d73}
+@media(prefers-reduced-motion:reduce){button:hover{transform:none}}
+
+.performance-monitor{
+  margin-top:7px;padding:6px 8px;border:1px solid rgba(62,166,255,.14);border-radius:10px;
+  background:linear-gradient(90deg,rgba(62,166,255,.07),rgba(34,211,238,.035),rgba(255,255,255,.018));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045);
+}
+.perf-title{font-size:8px;font-weight:800;letter-spacing:.11em;color:#8fa8bf}
+.perf-metrics{display:flex;flex-wrap:wrap;gap:5px 12px;margin-top:3px;color:#7f91a4;font-size:9px}
+.perf-metrics span{white-space:nowrap}.perf-metrics b{color:#dcecff;font-variant-numeric:tabular-nums}
+
 /* Compact control layout */
 .shell{padding:18px 14px 28px}
 .hero{gap:12px;margin-bottom:10px}
@@ -260,6 +300,11 @@ https://example.com"></textarea>
           <option value="auto" selected>Auto</option>
           <option value="lowest">Lowest available resolution</option>
         </select><div id="quality-help" class="setting-help">Forces YouTube panes toward the lowest quality available for the video.</div></div>
+        <div class="setting-card"><label for="speed">⚡ SPEED</label><select id="speed" aria-describedby="speed-help">
+          <option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="0.75">0.75×</option>
+          <option value="1" selected>1× Normal</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option>
+          <option value="2">2×</option><option value="4">4×</option><option value="6">6×</option><option value="8">8×</option><option value="10">10×</option>
+        </select><div id="speed-help" class="setting-help">Applies the selected playback rate to all YouTube panes. Availability depends on YouTube/video support.</div></div>
       </div>
       <div class="actions">
         <div class="action-group primary-group">
@@ -277,6 +322,16 @@ https://example.com"></textarea>
         </div>
       </div>
       <div id="status" class="status" role="status" aria-live="polite"></div>
+      <div id="performance-monitor" class="performance-monitor" aria-live="polite">
+        <div class="perf-title">📈 PERFORMANCE MONITOR</div>
+        <div class="perf-metrics">
+          <span><b id="perf-panes">0</b> panes</span>
+          <span><b id="perf-playing">0</b> playing</span>
+          <span><b id="perf-loaded">0</b> loaded</span>
+          <span><b id="perf-memory">—</b> memory</span>
+          <span><b id="perf-fps">—</b> FPS</span>
+        </div>
+      </div>
       <div id="history" class="history hidden" aria-label="Session controls"></div>
     </div>
   </section>
@@ -380,7 +435,7 @@ function saveSession(){
   try{localStorage.setItem(SESSION_KEY,JSON.stringify({
     urls:$("urls").value.split(/\n+/).map(normalize).filter(Boolean),
     playlist:$("playlist-url").value.trim(),
-    layers:getLayerCount(),mode:$("mode").value,quality:$("quality").value
+    layers:getLayerCount(),mode:$("mode").value,quality:$("quality").value,speed:Number($("speed").value)||1
   }))}catch(e){}
 }
 function renderHistory(){
@@ -397,6 +452,7 @@ function restoreSession(){
     $("layers").value=Number.isFinite(Number(s.layers))&&Number(s.layers)>0?Number(s.layers):1;
     if(s.mode)$("mode").value=s.mode;
     if(s.quality==="lowest"||s.quality==="auto")$("quality").value=s.quality;
+    if(Number.isFinite(Number(s.speed)) && [0.25,0.5,0.75,1,1.25,1.5,2,4,6,8,10].includes(Number(s.speed)))$("speed").value=String(s.speed);
     updatePaneCount();build();
     status.textContent="Last session restored.";
     window.scrollTo({top:0,behavior:"smooth"});
@@ -482,6 +538,19 @@ function makePane(url,index,options={}){
   }
   return p;
 }
+function applyVideoSpeed(p){
+  if(!p.player)return;
+  const rate=Number($("speed")?.value)||1;
+  try{
+    const supported=p.player.getAvailablePlaybackRates?.();
+    if(Array.isArray(supported)&&supported.length&&!supported.includes(rate)){
+      const nearest=supported.reduce((a,b)=>Math.abs(b-rate)<Math.abs(a-rate)?b:a,supported[0]);
+      p.player.setPlaybackRate(nearest);
+    }else{
+      p.player.setPlaybackRate(rate);
+    }
+  }catch(e){}
+}
 async function applyVideoQuality(p){
   if(!p.player||$("quality").value!=="lowest")return;
   try{
@@ -508,6 +577,7 @@ async function initYouTube(p){
           try{p.player.cuePlaylist({listType:"playlist",list:p.playlistId,index:p.playlistIndex||0})}catch(e){setState(p,"playlist error","error");return}
         }
         applyVideoQuality(p);
+        applyVideoSpeed(p);
         setState(p,$("mode").value==="qa-loop"?"ready · press Play all":"ready");
       },
       onStateChange:e=>{
@@ -625,6 +695,12 @@ $("playlist-url").addEventListener("input",updatePaneCount);
 
 $("urls").addEventListener("input",updatePaneCount);
 $("layers").addEventListener("input",updatePaneCount);
+$("speed").addEventListener("change",()=>{
+  saveSession();
+  panes.forEach(p=>applyVideoSpeed(p));
+  const rate=Number($("speed").value)||1;
+  status.textContent="Playback speed set to "+rate+"× for loaded YouTube panes.";
+});
 $("quality").addEventListener("change",()=>{
   saveSession();
   panes.forEach(p=>applyVideoQuality(p));
@@ -673,13 +749,36 @@ $("clear").onclick=()=>{
 };
 window.addEventListener("resize",()=>{if(panes.length)layout(panes.length)});
 
+let perfFrameCount=0,perfLastFrame=performance.now(),perfFps=0;
+function perfFrame(now){
+  perfFrameCount++;
+  if(now-perfLastFrame>=1000){
+    perfFps=Math.round((perfFrameCount*1000)/(now-perfLastFrame));
+    perfFrameCount=0;perfLastFrame=now;
+  }
+  requestAnimationFrame(perfFrame);
+}
+requestAnimationFrame(perfFrame);
+function updatePerformanceMonitor(){
+  const total=panes.length;
+  const playing=panes.filter(p=>p.state?.textContent==="playing").length;
+  const loaded=panes.filter(p=>!!p.player).length;
+  const mem=performance.memory?.usedJSHeapSize;
+  const memory=mem?((mem/1048576).toFixed(0)+" MB"):"n/a";
+  const set=(id,v)=>{const el=$(id);if(el)el.textContent=v};
+  set("perf-panes",total);set("perf-playing",playing);set("perf-loaded",loaded);
+  set("perf-memory",memory);set("perf-fps",perfFps?String(perfFps):"—");
+}
+setInterval(updatePerformanceMonitor,1000);
+updatePerformanceMonitor();
+
 const langButtons=document.querySelectorAll("[data-lang]");
 const i18n={
   en:{
     playlistLabel:"YOUTUBE PLAYLIST URL",playlistPlaceholder:"https://www.youtube.com/playlist?list=PLAYLIST_ID",playlistHelp:"Loads the playlist across the selected panes in playlist order. When a video ends, that pane advances to its next assigned playlist video.",loadPlaylist:"Load playlist",
     urlsLabel:"VIDEO / PAGE URLS — one per line", urlsPlaceholder:"https://www.youtube.com/watch?v=VIDEO_ID\\nhttps://youtu.be/VIDEO_ID\\nhttps://example.com",
     layers:"QA LAYERS", layersHelp:"Repeats the URL set for parallel player and localization testing.", total:"TOTAL PANES", totalEmpty:"Enter URLs to see total panes",
-    playback:"PLAYBACK", qaLoop:"Test loop on video end", manual:"Manual", quality:"VIDEO QUALITY", auto:"Auto", lowest:"Lowest available resolution", qualityHelp:"Forces YouTube panes toward the lowest quality available for the video.",
+    playback:"PLAYBACK", qaLoop:"Test loop on video end", manual:"Manual", quality:"VIDEO QUALITY", speed:"⚡ SPEED", speedHelp:"Applies the selected playback rate to all YouTube panes.", auto:"Auto", lowest:"Lowest available resolution", qualityHelp:"Forces YouTube panes toward the lowest quality available for the video.",
     load:"Load panes", refresh:"Reload all", play:"Play all", stop:"Stop all", mute:"Mute all", clear:"Clear",
     recent:"RECENT / QUICK START", restore:"Restore last session", clearHistory:"Clear history", siteVisitors:"SITE VISITORS",
     kicker:"A PROJECT OF WARAQ ENTERPRISES, GILGIT", developed:"Developed & Vibe Coded by Saif Ullah Jailani", address:"Waraq Enterprises, KIU Road, Court Area, Konodass, Gilgit, Pakistan - 15100",
@@ -696,7 +795,7 @@ const i18n={
   ur:{
     urlsLabel:"ویڈیو / صفحے کے لنکس — ہر سطر میں ایک", urlsPlaceholder:"https://www.youtube.com/watch?v=VIDEO_ID\\nhttps://youtu.be/VIDEO_ID\\nhttps://example.com",
     layers:"ٹیسٹنگ لیئرز", layersHelp:"متوازی پلیئر اور لوکلائزیشن ٹیسٹنگ کے لیے لنکس کے مجموعے کو دہرائیں۔", total:"کل پینلز", totalEmpty:"کل پینلز دیکھنے کے لیے لنکس درج کریں",
-    playback:"پلے بیک", qaLoop:"ویڈیو ختم ہونے پر دوبارہ چلائیں", manual:"دستی", quality:"ویڈیو کوالٹی", auto:"خودکار", lowest:"دستیاب کم ترین ریزولوشن", qualityHelp:"یوٹیوب پینلز کو ویڈیو کی دستیاب کم ترین کوالٹی پر چلانے کی کوشش کرتا ہے۔",
+    playback:"پلے بیک", qaLoop:"ویڈیو ختم ہونے پر دوبارہ چلائیں", manual:"دستی", quality:"ویڈیو کوالٹی", speed:"⚡ رفتار", speedHelp:"منتخب رفتار تمام یوٹیوب پینلز پر لاگو ہوتی ہے۔", auto:"خودکار", lowest:"دستیاب کم ترین ریزولوشن", qualityHelp:"یوٹیوب پینلز کو ویڈیو کی دستیاب کم ترین کوالٹی پر چلانے کی کوشش کرتا ہے۔",
     load:"پینلز لوڈ کریں", refresh:"سب دوبارہ لوڈ کریں", play:"سب چلائیں", stop:"سب روکیں", mute:"سب خاموش کریں", clear:"صاف کریں",
     recent:"حالیہ / فوری آغاز", restore:"آخری سیشن بحال کریں", clearHistory:"تاریخ صاف کریں", siteVisitors:"سائٹ کے ملاحظات",
     kicker:"ورق انٹرپرائزز، گلگت کا منصوبہ", developed:"تیار کردہ اور وائِب کوڈ کردہ: سیف اللہ جیلانی", address:"ورق انٹرپرائزز، کے آئی یو روڈ، کورٹ ایریا، کونوداس، گلگت، پاکستان - 15100",
@@ -734,6 +833,10 @@ function setLanguage(lang){
   if(labels[2])labels[2].textContent=tr("total");
   if(labels[3])labels[3].textContent=tr("playback");
   if(labels[4])labels[4].textContent=tr("quality");
+  const speedLabel=document.querySelector('label[for="speed"]');
+  if(speedLabel)speedLabel.textContent=tr("speed");
+  const speedHelp=document.querySelector("#speed-help");
+  if(speedHelp)speedHelp.textContent=tr("speedHelp");
   $("playlist-url").placeholder=tr("playlistPlaceholder");
   $("urls").placeholder=tr("urlsPlaceholder");
   $("layers").nextElementSibling.textContent=tr("layersHelp");
