@@ -50,7 +50,7 @@ button{cursor:pointer}
 .setting-row{display:flex;align-items:center;gap:8px}
 .setting-row input{flex:1}
 .setting-unit{font-size:11px;color:var(--muted)}
-.pane-total{min-height:42px;display:flex;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:rgba(0,0,0,.28);color:var(--ink);font-size:12px;font-weight:600}
+.pane-total{min-height:42px;display:flex;align-items:center;justify-content:center;gap:4px;padding:7px 10px;border:1px solid var(--line);border-radius:11px;background:rgba(0,0,0,.28);color:var(--ink);font-size:11px;font-weight:600;text-align:center}.pane-total-number{font-size:24px;line-height:1;font-weight:800;color:#f5f7fb;text-shadow:0 0 12px rgba(62,166,255,.20)}.pane-total-detail{font-size:10px;color:var(--muted);line-height:1.25}
 .setting-help{margin-top:8px;color:#85858c;font-size:10px;line-height:1.35}
 .actions{display:flex;align-items:stretch;flex-wrap:wrap;gap:10px;margin-top:14px;width:100%}
 .action-group{display:flex;flex:1;gap:7px;padding:4px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.035);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
@@ -214,7 +214,7 @@ h1{font-size:clamp(32px,4.2vw,52px);margin-bottom:4px}
 .settings{gap:7px}
 .setting-card{padding:8px 9px;border-radius:11px}
 .setting-card label{margin-bottom:5px;font-size:9px}
-.setting-card input,.setting-card select,.pane-total{min-height:34px;padding:6px 8px;border-radius:8px;font-size:11px}
+.setting-card input,.setting-card select{min-height:34px;padding:6px 8px;border-radius:8px;font-size:11px}.pane-total{min-height:34px;padding:6px 8px;border-radius:8px}.pane-total-number{font-size:20px}
 .setting-help{margin-top:4px;font-size:9px}
 .setting-unit{font-size:9px}
 .actions{gap:6px;margin-top:8px}
@@ -291,7 +291,7 @@ https://example.com"></textarea>
     <div class="viewer-settings">
       <div class="settings">
         <div class="setting-card"><label for="layers">QA LAYERS</label><div class="setting-row"><input id="layers" type="number" min="1" step="1" value="1" inputmode="numeric" aria-describedby="layers-help"><span class="setting-unit">layers</span></div><div id="layers-help" class="setting-help">Repeats the URL set for parallel player and localization testing.</div></div>
-        <div class="setting-card"><label>TOTAL PANES</label><div id="pane-count" class="pane-total">Enter URLs to see total panes</div></div>
+        <div class="setting-card"><label>TOTAL PANES</label><div id="pane-count" class="pane-total" aria-live="polite"><strong class="pane-total-number">0</strong><span class="pane-total-detail">Enter URLs to see total panes</span></div></div>
         <div class="setting-card"><label for="mode">PLAYBACK</label><select id="mode">
           <option value="qa-loop" selected>Test loop on video end</option>
           <option value="manual">Manual</option>
@@ -463,17 +463,24 @@ function getLayerCount(){
   return Number.isFinite(value)&&value>0?value:1;
 }
 function updatePaneCount(){
+  const box=$("pane-count"), number=box?.querySelector(".pane-total-number"), detail=box?.querySelector(".pane-total-detail");
+  if(!box||!number||!detail)return;
   const playlist=$("playlist-url").value.trim();
   const urls=$("urls").value.split(/\n+/).map(normalize).filter(Boolean);
   const layers=getLayerCount();
   if(playlist){
-    $("pane-count").textContent="Playlist × "+layers+" pane"+(layers===1?"":"s");
+    number.textContent=String(layers);
+    detail.textContent="Playlist × "+layers+" pane"+(layers===1?"":"s");
     return;
   }
   const total=urls.length*layers;
-  $("pane-count").textContent=urls.length
-    ? urls.length+" URL(s) × "+layers+" layer"+(layers===1?"":"s")+" = "+total+" pane(s)"
-    : "Enter URLs or a YouTube playlist";
+  if(urls.length){
+    number.textContent=String(total);
+    detail.textContent=urls.length+" URL(s) × "+layers+" layer"+(layers===1?"":"s");
+  }else{
+    number.textContent="0";
+    detail.textContent=tr("totalEmpty");
+  }
 }
 function setState(p,text,kind=""){
   p.state.textContent=text;
@@ -793,6 +800,7 @@ const i18n={
     remove:"Remove from history", youtube:"YouTube", layer:"Layer"
   },
   ur:{
+    playlistLabel:"یوٹیوب پلے لسٹ لنک",playlistPlaceholder:"https://www.youtube.com/playlist?list=PLAYLIST_ID",playlistHelp:"منتخب پینلز میں پلے لسٹ کو ترتیب کے ساتھ لوڈ کرتا ہے۔ ویڈیو ختم ہونے پر متعلقہ پینل اپنی اگلی تفویض کردہ ویڈیو پر جاتا ہے۔",
     urlsLabel:"ویڈیو / صفحے کے لنکس — ہر سطر میں ایک", urlsPlaceholder:"https://www.youtube.com/watch?v=VIDEO_ID\\nhttps://youtu.be/VIDEO_ID\\nhttps://example.com",
     layers:"ٹیسٹنگ لیئرز", layersHelp:"متوازی پلیئر اور لوکلائزیشن ٹیسٹنگ کے لیے لنکس کے مجموعے کو دہرائیں۔", total:"کل پینلز", totalEmpty:"کل پینلز دیکھنے کے لیے لنکس درج کریں",
     playback:"پلے بیک", qaLoop:"ویڈیو ختم ہونے پر دوبارہ چلائیں", manual:"دستی", quality:"ویڈیو کوالٹی", speed:"⚡ رفتار", speedHelp:"منتخب رفتار تمام یوٹیوب پینلز پر لاگو ہوتی ہے۔", auto:"خودکار", lowest:"دستیاب کم ترین ریزولوشن", qualityHelp:"یوٹیوب پینلز کو ویڈیو کی دستیاب کم ترین کوالٹی پر چلانے کی کوشش کرتا ہے۔",
@@ -828,11 +836,16 @@ function setLanguage(lang){
   const labels=document.querySelectorAll(".controls label");
   const playlistLabel=document.querySelector('label[for="playlist-url"]');
   if(playlistLabel)playlistLabel.textContent=tr("playlistLabel");
-  if(labels[0])labels[0].textContent=tr("urlsLabel");
-  if(labels[1])labels[1].textContent=tr("layers");
-  if(labels[2])labels[2].textContent=tr("total");
-  if(labels[3])labels[3].textContent=tr("playback");
-  if(labels[4])labels[4].textContent=tr("quality");
+  const urlsLabel=document.querySelector('label[for="urls"]');
+  const layersLabel=document.querySelector('label[for="layers"]');
+  const totalLabel=document.querySelector('#pane-count')?.previousElementSibling;
+  const modeLabel=document.querySelector('label[for="mode"]');
+  const qualityLabel=document.querySelector('label[for="quality"]');
+  if(urlsLabel)urlsLabel.textContent=tr("urlsLabel");
+  if(layersLabel)layersLabel.textContent=tr("layers");
+  if(totalLabel)totalLabel.textContent=tr("total");
+  if(modeLabel)modeLabel.textContent=tr("playback");
+  if(qualityLabel)qualityLabel.textContent=tr("quality");
   const speedLabel=document.querySelector('label[for="speed"]');
   if(speedLabel)speedLabel.textContent=tr("speed");
   const speedHelp=document.querySelector("#speed-help");
@@ -842,7 +855,7 @@ function setLanguage(lang){
   $("layers").nextElementSibling.textContent=tr("layersHelp");
   const playlistHelp=document.querySelector("#playlist-url")?.parentElement?.nextElementSibling;
   if(playlistHelp)playlistHelp.textContent=tr("playlistHelp");
-  $("pane-count").textContent=$("urls").value.trim()?$("pane-count").textContent:tr("totalEmpty");
+  updatePaneCount();
   $("mode").options[0].textContent=tr("qaLoop"); $("mode").options[1].textContent=tr("manual");
   $("quality").options[0].textContent=tr("auto"); $("quality").options[1].textContent=tr("lowest");
   $("quality-help").textContent=tr("qualityHelp");
