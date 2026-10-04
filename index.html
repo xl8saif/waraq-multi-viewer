@@ -35,6 +35,12 @@ button{cursor:pointer}
  padding:8px 12px;border-radius:999px;color:#d4d4d8;font-size:12px;backdrop-filter:blur(18px)}
 .glass{border:1px solid var(--line);background:var(--panel);box-shadow:0 20px 60px rgba(0,0,0,.3);
  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:var(--radius)}
+.playlist-input{display:flex;gap:9px;align-items:stretch}
+.playlist-input input{flex:1;min-width:0;padding:12px 13px;border:1px solid var(--line);border-radius:13px;background:rgba(0,0,0,.28);color:var(--ink);outline:none}
+.playlist-input input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(10,132,255,.14)}
+.playlist-input button{white-space:nowrap}
+.field-help{margin-top:7px;color:#85858c;font-size:10px;line-height:1.4}
+@media(max-width:560px){.playlist-input{flex-direction:column}.playlist-input button{width:100%}}
 .viewer-settings{margin-top:16px}
 .settings{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .setting-card{min-width:0;padding:14px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.045);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
@@ -146,6 +152,13 @@ button, .circle, .control-circle, .pane-control, .icon-button {
 
   <section class="glass controls">
     <div class="field">
+      <label for="playlist-url">YOUTUBE PLAYLIST URL</label>
+      <div class="playlist-input">
+        <input id="playlist-url" type="url" inputmode="url" spellcheck="false" placeholder="https://www.youtube.com/playlist?list=PLAYLIST_ID">
+        <button id="load-playlist" type="button" class="primary">Load playlist</button>
+      </div>
+      <div class="field-help">Loads the playlist across the selected panes in playlist order. When a video ends, that pane advances to its next assigned playlist video.</div>
+    </div><div class="field">
       <label for="urls">VIDEO / PAGE URLS — one per line</label>
       <textarea id="urls" spellcheck="false" placeholder="https://www.youtube.com/watch?v=VIDEO_ID
 https://youtu.be/VIDEO_ID
@@ -225,6 +238,14 @@ function getYouTubeId(raw){
   }catch(e){}
   return null;
 }
+function getYouTubePlaylistId(raw){
+  try{
+    const u=new URL(raw);
+    const host=u.hostname.replace(/^www\./,"").toLowerCase();
+    if(host!=="youtube.com"&&host!=="m.youtube.com"&&host!=="youtube-nocookie.com")return null;
+    return u.searchParams.get("list")||null;
+  }catch(e){return null}
+}
 function normalize(raw){
   let u=raw.trim();
   if(!u)return null;
@@ -269,37 +290,21 @@ function saveHistory(urls){
 function saveSession(){
   try{localStorage.setItem(SESSION_KEY,JSON.stringify({
     urls:$("urls").value.split(/\n+/).map(normalize).filter(Boolean),
+    playlist:$("playlist-url").value.trim(),
     layers:getLayerCount(),mode:$("mode").value,quality:$("quality").value
   }))}catch(e){}
 }
 function renderHistory(){
-  const history=readHistory(),box=$("history"),list=$("history-list");
-  if(!history.length){box.classList.add("hidden");return}
-  box.classList.remove("hidden");
-  list.innerHTML="";
-  history.forEach((url,i)=>{
-    const row=document.createElement("div");row.className="history-item";
-    const btn=document.createElement("button");btn.type="button";btn.title=url;btn.textContent=url;
-    btn.onclick=()=>{
-      $("urls").value=url;
-      updatePaneCount();
-      build();
-      window.scrollTo({top:0,behavior:"smooth"});
-    };
-    const rm=document.createElement("button");rm.type="button";rm.className="remove-history";rm.title="Remove from history";rm.textContent="×";
-    rm.onclick=()=>{
-      const h=readHistory();h.splice(i,1);
-      try{localStorage.setItem(HISTORY_KEY,JSON.stringify(h))}catch(e){}
-      renderHistory();
-    };
-    row.append(btn,rm);list.appendChild(row);
-  });
+  const box=$("history");
+  if(box)box.classList.remove("hidden");
 }
 function restoreSession(){
   try{
     const s=JSON.parse(localStorage.getItem(SESSION_KEY)||"null");
-    if(!s||!Array.isArray(s.urls)||!s.urls.length)return;
-    $("urls").value=s.urls.join("\n");
+    if(!s)return;
+    $("playlist-url").value=typeof s.playlist==="string"?s.playlist:"";
+    $("urls").value=Array.isArray(s.urls)?s.urls.join("\n"):"";
+    if(!$("playlist-url").value&&!$("urls").value)return;
     $("layers").value=Number.isFinite(Number(s.layers))&&Number(s.layers)>0?Number(s.layers):1;
     if(s.mode)$("mode").value=s.mode;
     if(s.quality==="lowest"||s.quality==="auto")$("quality").value=s.quality;
@@ -313,12 +318,17 @@ function getLayerCount(){
   return Number.isFinite(value)&&value>0?value:1;
 }
 function updatePaneCount(){
+  const playlist=$("playlist-url").value.trim();
   const urls=$("urls").value.split(/\n+/).map(normalize).filter(Boolean);
   const layers=getLayerCount();
+  if(playlist){
+    $("pane-count").textContent="Playlist × "+layers+" pane"+(layers===1?"":"s");
+    return;
+  }
   const total=urls.length*layers;
   $("pane-count").textContent=urls.length
     ? urls.length+" URL(s) × "+layers+" layer"+(layers===1?"":"s")+" = "+total+" pane(s)"
-    : "Enter URLs to see total panes";
+    : "Enter URLs or a YouTube playlist";
 }
 function setState(p,text,kind=""){
   p.state.textContent=text;
@@ -346,7 +356,7 @@ function processYouTubeQueue(){
   });
 }
 function observeYouTube(p){
-  if(!p.ytId)return;
+  if(!p.ytId&&!p.playlistId)return;
   if(!ytObserver){
     ytObserver=new IntersectionObserver(entries=>{
       entries.forEach(entry=>{
@@ -359,20 +369,22 @@ function observeYouTube(p){
   }
   ytObserver.observe(p.el);
 }
-function makePane(url,index){
+function makePane(url,index,options={}){
   const ytId=getYouTubeId(url);
+  const playlistId=options.playlistId||null;
   const el=document.createElement("article");
   el.className="pane";
   el.innerHTML='<div class="pane-head"><span class="pane-num">'+(index+1)+'</span><span class="pane-title" title=""></span><span class="pane-state">ready</span><div class="pane-actions"><button data-action="reload">Reload</button><button data-action="open">Open</button></div></div><div class="player"></div>';
-  const title=el.querySelector(".pane-title"), state=el.querySelector(".pane-state"), playerBox=el.querySelector(".player");
-  title.textContent=ytId?"YouTube · "+ytId:url; title.title=url;
-  const p={url,index,el,state,player:null,ytId,ended:false};
+  const title=el.querySelector(".pane-title"),state=el.querySelector(".pane-state"),playerBox=el.querySelector(".player");
+  title.textContent=playlistId?"YouTube Playlist · "+playlistId+" · Video "+(index+1):(ytId?"YouTube · "+ytId:url);
+  title.title=url;
+  const p={url,index,el,state,player:null,ytId,playlistId,playlistIndex:options.startIndex||0,playlistStride:options.stride||1,ended:false};
   el.querySelector('[data-action="reload"]').onclick=()=>reloadPane(p);
   el.querySelector('[data-action="open"]').onclick=()=>window.open(url,"_blank","noopener,noreferrer");
-  if(ytId){
+  if(ytId||playlistId){
     playerBox.id="yt-"+Date.now()+"-"+index+"-"+Math.random().toString(36).slice(2);
     p.mountId=playerBox.id;
-    setState(p,"loading");
+    setState(p,playlistId?"playlist loading":"loading");
   }else{
     const f=document.createElement("iframe");
     f.src=url;f.title=url;f.loading="lazy";f.referrerPolicy="strict-origin-when-cross-origin";
@@ -395,29 +407,55 @@ async function applyVideoQuality(p){
 async function initYouTube(p){
   await loadYTApi();
   if(!document.body.contains(p.el))return;
+  const playerVars={playsinline:1,rel:0,modestbranding:1,origin:location.origin};
+  if(p.playlistId){playerVars.listType="playlist";playerVars.list=p.playlistId;playerVars.index=p.playlistIndex||0}
   p.player=new YT.Player(p.mountId,{
-    videoId:p.ytId,
+    ...(p.ytId?{videoId:p.ytId}:{}),
     width:"100%",height:"100%",
-    playerVars:{playsinline:1,rel:0,modestbranding:1,origin:location.origin},
+    playerVars,
     events:{
       onReady:()=>{
+        if(p.playlistId){
+          try{p.player.cuePlaylist({listType:"playlist",list:p.playlistId,index:p.playlistIndex||0})}catch(e){setState(p,"playlist error","error");return}
+        }
         applyVideoQuality(p);
         setState(p,$("mode").value==="qa-loop"?"ready · press Play all":"ready");
       },
       onStateChange:e=>{
-        if(e.data===YT.PlayerState.PLAYING)setState(p,"playing","playing");
-        else if(e.data===YT.PlayerState.PAUSED)setState(p,"paused");
+        if(e.data===YT.PlayerState.PLAYING){
+          if(p.playlistId){
+            try{
+              const idx=p.player.getPlaylistIndex();
+              if(Number.isFinite(idx)&&idx>=0)p.playlistIndex=idx;
+              const data=p.player.getVideoData?.();
+              if(data?.video_id){
+                const title=p.el.querySelector(".pane-title");
+                title.textContent="YouTube · "+(data.title||data.video_id);
+                title.title=p.url+" · Playlist video "+(p.playlistIndex+1);
+              }
+            }catch(err){}
+          }
+          setState(p,"playing","playing");
+        }else if(e.data===YT.PlayerState.PAUSED)setState(p,"paused");
         else if(e.data===YT.PlayerState.BUFFERING)setState(p,"buffering");
         else if(e.data===YT.PlayerState.ENDED){
           setState(p,"ended","ended");
-          if($("mode").value==="qa-loop" && getLayerCount()===1){
-            setTimeout(()=>{
-              if(p.player){p.player.seekTo(0,true);p.player.playVideo()}
-            },350);
+          if(p.playlistId && $("mode").value==="qa-loop"){
+            const next=p.playlistIndex+p.playlistStride;
+            let length=0;
+            try{length=p.player.getPlaylist().length||0}catch(err){}
+            if(next<length){
+              p.playlistIndex=next;
+              try{p.player.playVideoAt(next);setState(p,"loading next")}catch(err){setState(p,"playlist error","error")}
+            }else{
+              setState(p,"playlist complete","ended");
+            }
+          }else if(!p.playlistId && $("mode").value==="qa-loop" && getLayerCount()===1){
+            setTimeout(()=>{if(p.player){p.player.seekTo(0,true);p.player.playVideo()}},350);
           }
-        }else if(e.data===YT.PlayerState.CUED)setState(p,"ready");
+        }else if(e.data===YT.PlayerState.CUED)setState(p,p.playlistId?"ready":"ready");
       },
-      onError:()=>setState(p,"player error","error")
+      onError:()=>setState(p,p.playlistId?"playlist error":"player error","error")
     }
   });
 }
@@ -440,15 +478,36 @@ function build(){
   ytInitQueue=[];
   panes.forEach(p=>{if(p.player){try{p.player.destroy()}catch(e){}}});
   panes=[];
+  const playlistUrl=$("playlist-url").value.trim();
+  const playlistId=getYouTubePlaylistId(playlistUrl);
   const urls=$("urls").value.split(/\n+/).map(normalize).filter(Boolean);
-  if(!urls.length){grid.innerHTML='<div class="glass empty">Enter at least one valid URL.</div>';status.textContent="";return}
+  if(playlistUrl){
+    if(!playlistId){
+      grid.innerHTML='<div class="glass empty">Enter a valid YouTube playlist URL.</div>';
+      status.textContent="Invalid YouTube playlist URL.";
+      return;
+    }
+    saveHistory([playlistUrl]);
+    saveSession();
+    const paneCount=getLayerCount();
+    grid.innerHTML="";
+    layout(paneCount);
+    for(let i=0;i<paneCount;i++){
+      const p=makePane(playlistUrl,i,{playlistId,startIndex:i,stride:paneCount});
+      p.layer=i+1;
+      panes.push(p);
+      grid.appendChild(p.el);
+    }
+    status.textContent="Playlist loaded across "+paneCount+" pane"+(paneCount===1?"":"s")+" in playlist order. Play all starts the assigned videos; each pane advances through its next playlist position when a video ends.";
+    panes.forEach(observeYouTube);
+    return;
+  }
+  if(!urls.length){grid.innerHTML='<div class="glass empty">Enter at least one valid URL or a YouTube playlist URL.</div>';status.textContent="";return}
   saveHistory(urls);
   saveSession();
   const layers=getLayerCount();
   const shown=[];
-  for(let layer=1;layer<=layers;layer++){
-    urls.forEach(u=>shown.push({url:u,layer}));
-  }
+  for(let layer=1;layer<=layers;layer++)urls.forEach(u=>shown.push({url:u,layer}));
   grid.innerHTML="";
   layout(shown.length);
   shown.forEach((item,i)=>{
@@ -466,6 +525,15 @@ function build(){
   panes.filter(p=>p.ytId).forEach(observeYouTube);
 }
 $("load").onclick=build;
+$("load-playlist").onclick=()=>{
+  const value=$("playlist-url").value.trim();
+  if(!getYouTubePlaylistId(value)){status.textContent="Enter a valid YouTube playlist URL.";return}
+  $("urls").value="";
+  updatePaneCount();
+  build();
+};
+$("playlist-url").addEventListener("input",updatePaneCount);
+
 $("urls").addEventListener("input",updatePaneCount);
 $("layers").addEventListener("input",updatePaneCount);
 $("quality").addEventListener("change",()=>{
@@ -477,7 +545,7 @@ $("quality").addEventListener("change",()=>{
 });
 $("refresh").onclick=()=>panes.forEach(reloadPane);
 $("play").onclick=async()=>{
-  const youtubePanes=panes.filter(p=>p.ytId);
+  const youtubePanes=panes.filter(p=>p.ytId||p.playlistId);
   if(!youtubePanes.length){status.textContent="No YouTube panes are available to play.";return}
   youtubePanes.forEach(p=>queueYouTube(p));
   status.textContent="Preparing "+youtubePanes.length+" YouTube pane(s)…";
@@ -523,6 +591,7 @@ window.addEventListener("resize",()=>{if(panes.length)layout(panes.length)});
 const langButtons=document.querySelectorAll("[data-lang]");
 const i18n={
   en:{
+    playlistLabel:"YOUTUBE PLAYLIST URL",playlistPlaceholder:"https://www.youtube.com/playlist?list=PLAYLIST_ID",playlistHelp:"Loads the playlist across the selected panes in playlist order. When a video ends, that pane advances to its next assigned playlist video.",loadPlaylist:"Load playlist",
     urlsLabel:"VIDEO / PAGE URLS — one per line", urlsPlaceholder:"https://www.youtube.com/watch?v=VIDEO_ID\\nhttps://youtu.be/VIDEO_ID\\nhttps://example.com",
     layers:"QA LAYERS", layersHelp:"Repeats the URL set for parallel player and localization testing.", total:"TOTAL PANES", totalEmpty:"Enter URLs to see total panes",
     playback:"PLAYBACK", qaLoop:"Test loop on video end", manual:"Manual", quality:"VIDEO QUALITY", auto:"Auto", lowest:"Lowest available resolution", qualityHelp:"Forces YouTube panes toward the lowest quality available for the video.",
@@ -573,13 +642,18 @@ function setLanguage(lang){
   document.querySelector(".hero").dir=currentLang==="ur"?"rtl":"ltr";
   document.querySelector(".urdu-sub").style.display=currentLang==="ur"?"block":"none";
   const labels=document.querySelectorAll(".controls label");
+  const playlistLabel=document.querySelector('label[for="playlist-url"]');
+  if(playlistLabel)playlistLabel.textContent=tr("playlistLabel");
   if(labels[0])labels[0].textContent=tr("urlsLabel");
   if(labels[1])labels[1].textContent=tr("layers");
   if(labels[2])labels[2].textContent=tr("total");
   if(labels[3])labels[3].textContent=tr("playback");
   if(labels[4])labels[4].textContent=tr("quality");
+  $("playlist-url").placeholder=tr("playlistPlaceholder");
   $("urls").placeholder=tr("urlsPlaceholder");
   $("layers").nextElementSibling.textContent=tr("layersHelp");
+  const playlistHelp=document.querySelector("#playlist-url")?.parentElement?.nextElementSibling;
+  if(playlistHelp)playlistHelp.textContent=tr("playlistHelp");
   $("pane-count").textContent=$("urls").value.trim()?$("pane-count").textContent:tr("totalEmpty");
   $("mode").options[0].textContent=tr("qaLoop"); $("mode").options[1].textContent=tr("manual");
   $("quality").options[0].textContent=tr("auto"); $("quality").options[1].textContent=tr("lowest");
@@ -587,6 +661,7 @@ function setLanguage(lang){
   $("load").textContent=tr("load"); $("refresh").textContent=tr("refresh"); $("play").textContent=tr("play");
   $("stop").textContent=tr("stop"); $("mute").textContent=tr("mute"); $("clear").textContent=tr("clear");
     $("restore").textContent=tr("restore");
+  $("load-playlist").textContent=tr("loadPlaylist");
   document.querySelector(".footer-kicker").textContent=tr("kicker");
   document.querySelector(".footer-brand strong").textContent=tr("developed");
   document.querySelector(".footer-brand span").textContent=tr("address");
