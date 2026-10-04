@@ -381,12 +381,11 @@ async function initYouTube(p){
   p.player=new YT.Player(p.mountId,{
     videoId:p.ytId,
     width:"100%",height:"100%",
-    playerVars:{playsinline:1,rel:0,modestbranding:1},
+    playerVars:{playsinline:1,rel:0,modestbranding:1,origin:location.origin},
     events:{
       onReady:()=>{
         applyVideoQuality(p);
-        setState(p,$("mode").value==="qa-loop"?"ready · play when started":"ready");
-        if($("mode").value==="qa-loop" && getLayerCount()===1) p.player.playVideo();
+        setState(p,$("mode").value==="qa-loop"?"ready · press Play all":"ready");
       },
       onStateChange:e=>{
         if(e.data===YT.PlayerState.PLAYING)setState(p,"playing","playing");
@@ -420,6 +419,8 @@ function reloadPane(p){
   }
 }
 function build(){
+  if(ytObserver){try{ytObserver.disconnect()}catch(e){} ytObserver=null}
+  ytInitQueue=[];
   panes.forEach(p=>{if(p.player){try{p.player.destroy()}catch(e){}}});
   panes=[];
   const urls=$("urls").value.split(/\n+/).map(normalize).filter(Boolean);
@@ -495,7 +496,7 @@ $("clear-history").onclick=()=>{
   renderHistory();
 };
 $("clear").onclick=()=>{
-  if(ytObserver)panes.forEach(p=>{try{ytObserver.unobserve(p.el)}catch(e){}});
+  if(ytObserver){try{ytObserver.disconnect()}catch(e){} ytObserver=null}
   ytInitQueue=[];
   panes.forEach(p=>{if(p.player){try{p.player.destroy()}catch(e){}}});
   panes=[];grid.innerHTML='<div class="glass empty">Paste URLs above and select <b>Load panes</b>.</div>';status.textContent="";
